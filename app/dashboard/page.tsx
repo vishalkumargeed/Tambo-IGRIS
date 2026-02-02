@@ -1,10 +1,10 @@
-import RepoList from "../components/authentication/UserDetails";
+import RepoList from "@/app/components/authentication/RepoList"
 
-
-export default function Dashboard(){
-
-    return (<>
-    <h1>Dashboard</h1>
- <RepoList/>
-    </>)
+export default function Dashboard() {
+  return (
+    <div className="mx-auto w-full max-w-4xl space-y-6">
+    
+      <RepoList />
+    </div>
+  )
 }

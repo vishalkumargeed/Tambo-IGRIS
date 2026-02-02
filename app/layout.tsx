@@ -30,12 +30,16 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${inter.variable} ${plusJakartaSans.variable} font-sans antialiased`}
-      >
+      > 
+    <div className="font-heading tracking-tight">
+
+    
         <SessionProvider>
           {children}
         </SessionProvider>
-      
+     
         <Analytics />
+        </div>
       </body>
     </html>
   );

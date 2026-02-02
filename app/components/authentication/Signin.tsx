@@ -9,7 +9,7 @@ export default function SignIn() {
         await signIn("github" , { redirectTo: "/dashboard" })
       }}
     >
-      <button type="submit">Signin with GitHub</button>
+      <button type="submit" className="font-heading tracking-tight">Signin with GitHub</button>
     </form>
   )
 } 
