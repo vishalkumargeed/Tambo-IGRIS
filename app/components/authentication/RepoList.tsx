@@ -3,9 +3,7 @@ import Link from "next/link"
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -21,10 +19,11 @@ type GitHubRepo = {
   stargazers_count: number
   language: string | null
   updated_at: string
+  owner: { login: string }
 }
 
 async function fetchUserRepos(accessToken: string): Promise<GitHubRepo[]> {
-  const res = await fetch("https://api.github.com/user/repos?per_page=100&sort=updated", {
+  const res = await fetch("https://api.github.com/user/repos?per_page=50&sort=updated", {
     headers: {
       Authorization: `Bearer ${accessToken}`,
       Accept: "application/vnd.github.v3+json",
@@ -37,6 +36,7 @@ async function fetchUserRepos(accessToken: string): Promise<GitHubRepo[]> {
 
 export default async function RepoList() {
   const session = await auth()
+  console.log ("session is :",session);
   if (!session?.user) return null
 
   const accessToken = session.accessToken
@@ -52,6 +52,7 @@ export default async function RepoList() {
   let repos: GitHubRepo[]
   try {
     repos = await fetchUserRepos(accessToken)
+    console.log ("repos are :",repos);
   } catch {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
@@ -103,7 +104,7 @@ export default async function RepoList() {
           Your repositories
         </h3>
         <Table>
-          <TableCaption>A list of your GitHub repositories (public and private).</TableCaption>
+         
           <TableHeader>
             <TableRow>
               <TableHead className="w-[180px]">Repository</TableHead>
@@ -120,9 +121,7 @@ export default async function RepoList() {
               <TableRow key={repo.id}>
                 <TableCell className="font-medium">
                   <Link
-                    href={repo.html_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={`/repo/${encodeURIComponent(repo.owner.login)}?repo=${encodeURIComponent(repo.name)}`}
                     className="text-blue-600 hover:underline dark:text-blue-400 break-all"
                   >
                     {repo.full_name}
@@ -147,9 +146,7 @@ export default async function RepoList() {
                 <TableCell>{new Date(repo.updated_at).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <Link
-                    href={repo.html_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={`/repo/${encodeURIComponent(repo.owner.login)}?repo=${encodeURIComponent(repo.name)}`}
                     className="text-blue-600 hover:underline dark:text-blue-400"
                   >
                     View
@@ -158,12 +155,7 @@ export default async function RepoList() {
               </TableRow>
             ))}
           </TableBody>
-          <TableFooter>
-            <TableRow>
-              <TableCell colSpan={6}>Total repositories</TableCell>
-              <TableCell className="text-right">{repos.length}</TableCell>
-            </TableRow>
-          </TableFooter>
+          
         </Table>
       </div>
     </div>
