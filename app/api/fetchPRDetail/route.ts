@@ -5,20 +5,19 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const owner = searchParams.get("owner");
     const repoName = searchParams.get("repoName");
-    const state = searchParams.get("state") ?? "open"; // open | closed | all
+    const prNumber = searchParams.get("prNumber");
     const authHeader = request.headers.get("Authorization");
     const token = authHeader?.replace(/^Bearer\s+/i, "");
 
-    if (!owner || !repoName || !token) {
+    if (!owner || !repoName || !prNumber || !token) {
       return NextResponse.json(
-        { error: "Missing owner, repoName, or Authorization header" },
+        { error: "Missing owner, repoName, prNumber, or Authorization header" },
         { status: 400 }
       );
     }
 
-    const validState = ["open", "closed", "all"].includes(state) ? state : "open";
     const response = await fetch(
-      `https://api.github.com/repos/${owner}/${repoName}/pulls?state=${validState}&per_page=30`,
+      `https://api.github.com/repos/${owner}/${repoName}/pulls/${prNumber}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -39,7 +38,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data });
   } catch (error) {
     return NextResponse.json({
-      error: "Failed to fetch PRs",
+      error: "Failed to fetch PR details",
       message: error instanceof Error ? error.message : "Unknown error",
     });
   }
