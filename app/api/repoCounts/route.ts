@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const [prRes, searchRes] = await Promise.all([
+    const [prRes, issuesRes] = await Promise.all([
       fetch(
         `https://api.github.com/repos/${owner}/${repoName}/pulls?state=open&per_page=1`,
         {
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
         }
       ),
       fetch(
-        `https://api.github.com/search/issues?q=repo:${owner}/${repoName}+is:issue+is:open`,
+        `https://api.github.com/repos/${owner}/${repoName}/issues?state=open&per_page=100`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -53,9 +53,12 @@ export async function GET(request: NextRequest) {
       const prData = await prRes.json();
       openPrs = getLastPage(prLink) || (Array.isArray(prData) ? prData.length : 0);
     }
-    if (searchRes.ok) {
-      const searchData = await searchRes.json();
-      openIssues = typeof searchData.total_count === "number" ? searchData.total_count : 0;
+    if (issuesRes.ok) {
+      const issuesData = await issuesRes.json();
+      const issuesOnly = Array.isArray(issuesData)
+        ? issuesData.filter((i: { pull_request?: unknown }) => !i.pull_request)
+        : [];
+      openIssues = issuesOnly.length;
     }
 
     return NextResponse.json({

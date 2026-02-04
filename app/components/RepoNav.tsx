@@ -18,10 +18,7 @@ export function RepoNav({ owner = null, repoContext = true }: RepoNavProps) {
   const [counts, setCounts] = useState<{ openPrs: number; openIssues: number } | null>(null)
 
   useEffect(() => {
-    if (!repoContext || !owner || !repo) {
-      setCounts(null)
-      return
-    }
+    if (!repoContext || !owner || !repo) return
     let cancelled = false
     fetch(`/api/repoCounts?owner=${encodeURIComponent(owner)}&repoName=${encodeURIComponent(repo)}`)
       .then((r) => r.json())
@@ -34,13 +31,15 @@ export function RepoNav({ owner = null, repoContext = true }: RepoNavProps) {
 
   const base = owner ? `/repo/${encodeURIComponent(owner)}` : "#"
   const q = repo ? `?repo=${encodeURIComponent(repo)}` : ""
+  const showCounts = repoContext && owner && repo && counts
 
   const isCode = pathname.endsWith("/code")
-  const isIssues = pathname.endsWith("/issues")
+  const isIssues = pathname.includes("/issues")
   const isPulls = !isCode && !isIssues && pathname.includes("/repo/") && !pathname.includes("/pr/")
 
-  const linkClass = "flex items-center gap-2 text-sm text-foreground hover:text-foreground/90"
-  const activeBorder = "border-b-2 border-orange-500 pb-3 -mb-[1px]"
+  const linkClass =
+    "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground hover:bg-muted/80 hover:text-foreground"
+  const activeClass = "bg-muted font-medium"
 
   if (!repoContext || !owner) {
     return (
@@ -68,32 +67,32 @@ export function RepoNav({ owner = null, repoContext = true }: RepoNavProps) {
       <div className="flex justify-center gap-8 px-4 py-3">
         <Link
           href={`${base}/code${q}`}
-          className={`${linkClass} ${isCode ? activeBorder : ""}`}
+          className={`${linkClass} ${isCode ? activeClass : ""}`}
         >
           <Code2 className="h-4 w-4 shrink-0" />
           Code
         </Link>
         <Link
           href={`${base}/issues${q}`}
-          className={`${linkClass} ${isIssues ? activeBorder : ""}`}
+          className={`${linkClass} ${isIssues ? activeClass : ""}`}
         >
           <CircleDot className="h-4 w-4 shrink-0" />
           Issues
-          {counts && (
-            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-              {counts.openIssues}
+          {showCounts && (
+            <span className="rounded-full bg-background/80 px-2 py-0.5 text-xs font-medium text-muted-foreground dark:bg-neutral-800">
+              {counts?.openIssues}
             </span>
           )}
         </Link>
         <Link
           href={`${base}${q}`}
-          className={`${linkClass} ${isPulls ? activeBorder : ""}`}
+          className={`${linkClass} ${isPulls ? activeClass : ""}`}
         >
           <GitPullRequest className="h-4 w-4 shrink-0" />
           Pull requests
-          {counts && (
-            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-              {counts.openPrs}
+          {showCounts && (
+            <span className="rounded-full bg-background/80 px-2 py-0.5 text-xs font-medium text-muted-foreground dark:bg-neutral-800">
+              {counts?.openPrs}
             </span>
           )}
         </Link>

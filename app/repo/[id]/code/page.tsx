@@ -1,6 +1,13 @@
 import { auth } from "@/auth"
 import Link from "next/link"
 import { RepoBreadcrumb } from "@/app/components/RepoBreadcrumb"
+import { RepoCodeExplorer } from "@/app/components/RepoCodeExplorer"
+
+function getBaseUrl() {
+  if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+  return "http://localhost:3000"
+}
 
 export default async function RepoCodePage({
   params,
@@ -42,27 +49,41 @@ export default async function RepoCodePage({
     )
   }
 
-  const githubCodeUrl = `https://github.com/${owner}/${repoName}`
+  const baseUrl = getBaseUrl()
+  const token = session.accessToken
+  let filePaths: string[] = []
+  let treeError: string | null = null
+
+  try {
+    const res = await fetch(
+      `${baseUrl}/api/repoTree?owner=${encodeURIComponent(owner)}&repoName=${encodeURIComponent(repoName)}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      }
+    )
+    const json = await res.json()
+    if (!res.ok) treeError = json.message ?? json.error ?? "Failed to load repository tree"
+    else if (json.success && Array.isArray(json.data)) filePaths = json.data
+  } catch (e) {
+    treeError = e instanceof Error ? e.message : "Failed to load tree"
+  }
 
   return (
     <div className="space-y-6">
       <RepoBreadcrumb owner={owner} section="Code" />
-      <div className="rounded-lg border border-neutral-200 bg-neutral-50/50 p-6 dark:border-neutral-700 dark:bg-neutral-900/50">
-        <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-          Code
-        </h2>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-          Browse the source code for {owner}/{repoName} on GitHub.
-        </p>
-        <a
-          href={githubCodeUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 inline-flex items-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
-        >
-          Browse code on GitHub →
-        </a>
-      </div>
+      {treeError ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
+          <p className="font-medium">Could not load code</p>
+          <p className="mt-1 text-sm">{treeError}</p>
+        </div>
+      ) : (
+        <RepoCodeExplorer
+          owner={owner}
+          repoName={repoName}
+          filePaths={filePaths}
+        />
+      )}
     </div>
   )
 }

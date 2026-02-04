@@ -5,20 +5,22 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const owner = searchParams.get("owner");
     const repoName = searchParams.get("repoName");
-    const state = searchParams.get("state") ?? "open";
+    const issueNumber = searchParams.get("issueNumber");
     const authHeader = request.headers.get("Authorization");
     const token = authHeader?.replace(/^Bearer\s+/i, "");
 
-    if (!owner || !repoName || !token) {
+    if (!owner || !repoName || !issueNumber || !token) {
       return NextResponse.json(
-        { error: "Missing owner, repoName, or Authorization header" },
+        {
+          error:
+            "Missing owner, repoName, issueNumber, or Authorization header",
+        },
         { status: 400 }
       );
     }
 
-    const validState = ["open", "closed", "all"].includes(state) ? state : "open";
     const response = await fetch(
-      `https://api.github.com/repos/${owner}/${repoName}/issues?state=${validState}&per_page=100&sort=updated`,
+      `https://api.github.com/repos/${owner}/${repoName}/issues/${issueNumber}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -36,13 +38,10 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    const issuesOnly = Array.isArray(data)
-      ? data.filter((i: { pull_request?: unknown }) => !i.pull_request)
-      : [];
-    return NextResponse.json({ success: true, data: issuesOnly });
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     return NextResponse.json({
-      error: "Failed to fetch issues",
+      error: "Failed to fetch issue details",
       message: error instanceof Error ? error.message : "Unknown error",
     });
   }

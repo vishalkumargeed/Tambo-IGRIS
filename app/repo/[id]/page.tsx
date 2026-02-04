@@ -161,14 +161,14 @@ export default async function RepoDetailsPage({
         `${baseUrl}/api/fetchPR?owner=${encodeURIComponent(owner)}&repoName=${encodeURIComponent(repoName)}&state=open`,
         {
           headers: { Authorization: `Bearer ${token}` },
-          next: { revalidate: 60 },
+          cache: "no-store",
         }
       ),
       fetch(
         `${baseUrl}/api/fetchPR?owner=${encodeURIComponent(owner)}&repoName=${encodeURIComponent(repoName)}&state=closed`,
         {
           headers: { Authorization: `Bearer ${token}` },
-          next: { revalidate: 60 },
+          cache: "no-store",
         }
       ),
     ])

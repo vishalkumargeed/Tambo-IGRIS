@@ -86,7 +86,7 @@ export default async function RepoIssuesPage({
       `${baseUrl}/api/fetchIssues?owner=${encodeURIComponent(owner)}&repoName=${encodeURIComponent(repoName)}&state=open`,
       {
         headers: { Authorization: `Bearer ${token}` },
-        next: { revalidate: 60 },
+        cache: "no-store",
       }
     )
     const json = await res.json()
@@ -123,12 +123,15 @@ export default async function RepoIssuesPage({
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-xs font-medium text-neutral-700 dark:bg-neutral-600 dark:text-neutral-200">
+                    <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-xs font-medium text-neutral-700 dark:bg-neutral-600 dark:text-neutral-200">
                       {issue.state}
                     </span>
-                    <span className="font-medium text-neutral-900 dark:text-neutral-100">
+                    <Link
+                      href={`/repo/${owner}/issues/${issue.number}?repo=${encodeURIComponent(repoName)}`}
+                      className="font-medium text-neutral-900 hover:underline dark:text-neutral-100"
+                    >
                       #{issue.number} {issue.title}
-                    </span>
+                    </Link>
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-x-3 text-xs text-neutral-500 dark:text-neutral-400">
                     {issue.user && (
