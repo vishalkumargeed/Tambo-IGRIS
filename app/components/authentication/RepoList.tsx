@@ -8,6 +8,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination"
+
+const REPOS_PER_PAGE = 10
 
 type GitHubRepo = {
   id: number
@@ -22,21 +33,42 @@ type GitHubRepo = {
   owner: { login: string }
 }
 
-async function fetchUserRepos(accessToken: string): Promise<GitHubRepo[]> {
-  const res = await fetch("https://api.github.com/user/repos?per_page=50&sort=updated", {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      Accept: "application/vnd.github.v3+json",
-    },
-    next: { revalidate: 60 },
-  })
-  if (!res.ok) throw new Error("Failed to fetch repos")
-  return res.json()
+function getLastPageFromLink(linkHeader: string | null): number {
+  if (!linkHeader) return 1
+  const match = linkHeader.match(/[?&]page=(\d+)[^>]*>;\s*rel="last"/)
+  return match ? parseInt(match[1], 10) : 1
 }
 
-export default async function RepoList() {
+async function fetchUserRepos(
+  accessToken: string,
+  page: number
+): Promise<{ repos: GitHubRepo[]; totalPages: number }> {
+  const res = await fetch(
+    `https://api.github.com/user/repos?per_page=${REPOS_PER_PAGE}&page=${page}&sort=updated`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/vnd.github.v3+json",
+      },
+      next: { revalidate: 60 },
+    }
+  )
+  if (!res.ok) throw new Error("Failed to fetch repos")
+  const repos: GitHubRepo[] = await res.json()
+  const linkHeader = res.headers.get("link")
+  const totalPagesFromLink = getLastPageFromLink(linkHeader)
+  // GitHub omits rel="last" when you're on the last page, so fall back to current page
+  const totalPages =
+    totalPagesFromLink > 1 ? totalPagesFromLink : Math.max(1, page)
+  return { repos, totalPages }
+}
+
+export default async function RepoList({
+  currentPage = 1,
+}: {
+  currentPage?: number
+}) {
   const session = await auth()
-  console.log ("session is :",session);
   if (!session?.user) return null
 
   const accessToken = session.accessToken
@@ -49,10 +81,12 @@ export default async function RepoList() {
     )
   }
 
-  let repos: GitHubRepo[]
+  let repos: GitHubRepo[] = []
+  let totalPages = 1
   try {
-    repos = await fetchUserRepos(accessToken)
-    console.log ("repos are :",repos);
+    const result = await fetchUserRepos(accessToken, currentPage)
+    repos = result.repos
+    totalPages = result.totalPages
   } catch {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
@@ -100,11 +134,15 @@ export default async function RepoList() {
       </div>
 
       <div>
-        <h3 className="mb-3 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-          Your repositories
-        </h3>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            Your repositories
+          </h3>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            Most recently updated · Page {currentPage} of {totalPages}
+          </p>
+        </div>
         <Table>
-         
           <TableHeader>
             <TableRow>
               <TableHead className="w-[180px]">Repository</TableHead>
@@ -112,7 +150,6 @@ export default async function RepoList() {
               <TableHead className="w-[100px]">Visibility</TableHead>
               <TableHead className="w-[100px]">Language</TableHead>
               <TableHead className="w-[80px] text-right">Stars</TableHead>
-              <TableHead className="w-[110px]">Last Updated</TableHead>
               <TableHead className="w-[70px]">Link</TableHead>
             </TableRow>
           </TableHeader>
@@ -143,7 +180,6 @@ export default async function RepoList() {
                 </TableCell>
                 <TableCell>{repo.language || "—"}</TableCell>
                 <TableCell className="text-right">{repo.stargazers_count}</TableCell>
-                <TableCell>{new Date(repo.updated_at).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <Link
                     href={`/repo/${encodeURIComponent(repo.owner.login)}?repo=${encodeURIComponent(repo.name)}`}
@@ -155,8 +191,69 @@ export default async function RepoList() {
               </TableRow>
             ))}
           </TableBody>
-          
         </Table>
+
+        {totalPages > 1 && (
+          <Pagination className="mt-4">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href={currentPage > 1 ? `/dashboard?page=${currentPage - 1}` : "#"}
+                  aria-disabled={currentPage <= 1}
+                  className={
+                    currentPage <= 1
+                      ? "pointer-events-none opacity-50"
+                      : undefined
+                  }
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => {
+                  if (totalPages <= 7) return true
+                  if (p === 1 || p === totalPages) return true
+                  if (Math.abs(p - currentPage) <= 1) return true
+                  return false
+                })
+                .reduce<number[]>((acc, p) => {
+                  const last = acc[acc.length - 1]
+                  if (last !== undefined && p - last > 1) acc.push(-1)
+                  acc.push(p)
+                  return acc
+                }, [])
+                .map((p, idx) =>
+                  p === -1 ? (
+                    <PaginationItem key={`ellipsis-${idx}`}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  ) : (
+                    <PaginationItem key={p}>
+                      <PaginationLink
+                        href={`/dashboard?page=${p}`}
+                        isActive={p === currentPage}
+                      >
+                        {p}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                )}
+              <PaginationItem>
+                <PaginationNext
+                  href={
+                    currentPage < totalPages
+                      ? `/dashboard?page=${currentPage + 1}`
+                      : "#"
+                  }
+                  aria-disabled={currentPage >= totalPages}
+                  className={
+                    currentPage >= totalPages
+                      ? "pointer-events-none opacity-50"
+                      : undefined
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </div>
     </div>
   )

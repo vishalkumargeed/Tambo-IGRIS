@@ -60,13 +60,7 @@ function PRListItem({
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={`/repo/${owner}/pr/${pr.number}?repo=${encodeURIComponent(repoName)}`}
-              className="font-medium text-neutral-900 hover:underline dark:text-neutral-100"
-            >
-              #{pr.number} {pr.title}
-            </Link>
-            <span
+          <span
               className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
                 pr.state === "open"
                   ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
@@ -75,6 +69,13 @@ function PRListItem({
             >
               {pr.state === "open" ? "Open" : "Closed"}
             </span>
+            <Link
+              href={`/repo/${owner}/pr/${pr.number}?repo=${encodeURIComponent(repoName)}`}
+              className="font-medium text-neutral-900 hover:underline dark:text-neutral-100"
+            >
+              #{pr.number} {pr.title}
+            </Link>
+           
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-neutral-500 dark:text-neutral-400">
             {pr.user && (

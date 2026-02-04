@@ -123,8 +123,14 @@ export default async function RepoIssuesPage({
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-xs font-medium text-neutral-700 dark:bg-neutral-600 dark:text-neutral-200">
-                      {issue.state}
+                    <span
+                      className={`shrink-0 rounded-full  px-2 py-0.5 text-xs font-medium ${
+                        issue.state === "open"
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
+                          : "bg-neutral-200 text-neutral-700 dark:bg-neutral-600 dark:text-neutral-200"
+                      }`}
+                    >
+                      {issue.state === "open" ? "Open" : "Closed"}
                     </span>
                     <Link
                       href={`/repo/${owner}/issues/${issue.number}?repo=${encodeURIComponent(repoName)}`}

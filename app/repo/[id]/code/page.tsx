@@ -69,21 +69,43 @@ export default async function RepoCodePage({
     treeError = e instanceof Error ? e.message : "Failed to load tree"
   }
 
+  const githubRepoUrl = `https://github.com/${owner}/${repoName}`
+
   return (
     <div className="space-y-6">
       <RepoBreadcrumb owner={owner} section="Code" />
-      {treeError ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
-          <p className="font-medium">Could not load code</p>
-          <p className="mt-1 text-sm">{treeError}</p>
-        </div>
-      ) : (
-        <RepoCodeExplorer
-          owner={owner}
-          repoName={repoName}
-          filePaths={filePaths}
-        />
-      )}
+
+      <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
+        <p className="font-medium">Why we recommend viewing code on GitHub</p>
+        <ul className="mt-2 text-sm leading-relaxed list-disc pl-5 space-y-1">
+     
+          <li>
+            Large repositories can hit API rate and size limits.
+          </li>
+          <li>
+            Some file types (such as binary files) aren’t viewable.
+          </li>
+          <li>
+            Navigation features like search, history, and blame are limited.
+          </li>
+          <li>
+            GitHub is optimized for code browsing and provides the best experience.
+          </li>
+          <li>
+            Use the button below to open this repository directly on GitHub.
+          </li>
+        </ul>
+        <a
+          href={githubRepoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex items-center rounded-md border border-amber-400 bg-amber-100 px-4 py-2 text-sm font-medium text-amber-900 hover:bg-amber-200 dark:border-amber-600 dark:bg-amber-900/60 dark:text-amber-100 dark:hover:bg-amber-900/80"
+        >
+          Open repository on GitHub →
+        </a>
+      </div>
+
+    
     </div>
   )
 }
