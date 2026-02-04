@@ -1,4 +1,6 @@
+import { Suspense } from "react"
 import Signout from "@/app/components/authentication/Signout"
+import { RepoNav } from "@/app/components/RepoNav"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,6 +11,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </h1>
         <Signout />
       </header>
+      <Suspense fallback={<div className="h-12 border-b border-border bg-muted/30" />}>
+        <RepoNav repoContext={false} />
+      </Suspense>
       <main className="flex-1 px-4 py-6 sm:px-6 sm:py-8">{children}</main>
     </div>
   )

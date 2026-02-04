@@ -1,5 +1,6 @@
 import { auth } from "@/auth"
 import Link from "next/link"
+import { RepoBreadcrumb } from "@/app/components/RepoBreadcrumb"
 
 function getBaseUrl() {
   if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL
@@ -183,6 +184,7 @@ export default async function RepoDetailsPage({
 
   return (
     <div className="space-y-6">
+      <RepoBreadcrumb owner={owner} section="Pull requests" />
       <div>
         <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
           {owner} / {repoName}
