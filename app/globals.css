@@ -46,6 +46,51 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+/* 1. Reduce the outer container padding */
+.markdown-body {
+  padding: 16px !important; /* Reduced from standard 45px */
+  font-size: 14px; /* GitHub's standard text size */
+  line-height: 1.5;
+}
+
+/* 2. Tighten paragraph spacing */
+.markdown-body p {
+  margin-bottom: 16px !important; /* Reduced from 16px */
+}
+
+/* 3. Tighten Header spacing */
+.markdown-body h1, 
+.markdown-body h2, 
+.markdown-body h3 {
+  margin-top: 10px !important; /* Reduces huge gaps above headers */
+  margin-bottom: 2px !important; /* Reduces gap below headers */
+  padding-bottom: 0.3em;
+}
+
+/* 4. Fix the "More than 2 lines" gap in Lists */
+/* This removes the extra paragraph margin inside list items */
+.markdown-body li > p {
+  margin-top: 0 !important;
+  margin-bottom: 4px !important; 
+}
+
+/* 5. Handle loose lists (items separated by newlines) */
+.markdown-body ul, 
+.markdown-body ol {
+  margin-bottom: 6px !important;
+  padding-left: 2em; /* Ensures bullets are visible */
+}
+
+.markdown-body li + li {
+  margin-top: 0.25em !important; /* Slight separation between list items */
+}
+
+/* Optional: Fix spacing for images if they are adding gaps */
+.markdown-body img {
+  background-color: transparent;
+  margin-bottom: 2px; 
+}
+
 body {
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -124,6 +169,8 @@ body {
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+
+
 
 @layer base {
   * {

@@ -1,6 +1,7 @@
 import { auth } from "@/auth"
 import Link from "next/link"
 import { PRFilesExplorer } from "@/app/components/PRFilesExplorer"
+import GitHubMarkdown from "@/components/githubMarkdown"
 
 function getBaseUrl() {
   if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL
@@ -314,7 +315,8 @@ export default async function PRDetailPage({
           </h2>
           <div className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900/30">
             <pre className="whitespace-pre-wrap wrap-break-word font-sans text-sm text-neutral-800 dark:text-neutral-200">
-              {pr.body}
+             
+             <GitHubMarkdown content={pr.body} /> 
             </pre>
           </div>
         </section>
