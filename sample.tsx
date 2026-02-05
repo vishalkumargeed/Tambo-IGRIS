@@ -37,15 +37,6 @@ import * as React from "react";
 export interface MessageThreadCollapsibleProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Whether the collapsible should be open by default (default: false) */
   defaultOpen?: boolean;
-  /** Controlled open state (use with onOpenChange for push-sidebar layout) */
-  open?: boolean;
-  /** Called when open state changes (e.g. user clicks close in push-sidebar mode) */
-  onOpenChange?: (open: boolean) => void;
-  /**
-   * "floatingBar" = fixed bar at bottom center (closed state only); "pushSidebar" = in-flow panel, content shifts left.
-   * Use floatingBar for the closed trigger; use pushSidebar when panel is open in a sidebar.
-   */
-  layoutMode?: "floatingBar" | "pushSidebar";
   /**
    * Controls the visual styling of messages in the thread.
    * Possible values include: "default", "compact", etc.
@@ -139,10 +130,10 @@ interface CollapsibleContainerProps extends React.HTMLAttributes<HTMLDivElement>
  */
 const CollapsibleContainer = React.forwardRef<
   HTMLDivElement,
-  CollapsibleContainerProps & { isHovered?: boolean; layoutMode?: "floatingBar" | "pushSidebar" }
+  CollapsibleContainerProps & { isHovered?: boolean }
 >(
   (
-    { className, isOpen, onOpenChange, isHovered = false, layoutMode = "pushSidebar", children, ...props },
+    { className, isOpen, onOpenChange, isHovered = false, children, ...props },
     ref,
   ) => (
     <Collapsible.Root
@@ -150,11 +141,14 @@ const CollapsibleContainer = React.forwardRef<
       open={isOpen}
       onOpenChange={onOpenChange}
       className={cn(
-        "rounded-xl shadow-2xl transition-all duration-300 ease-in-out",
-        layoutMode === "floatingBar" && "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[360px] max-w-[85vw]",
-        layoutMode === "floatingBar" && "bg-transparent border border-border/30 backdrop-blur-md",
-        layoutMode === "floatingBar" && isHovered && "w-[400px] scale-105",
-        layoutMode === "pushSidebar" && "h-full flex flex-col min-w-0 w-full bg-background border border-border",
+        "fixed bottom-6 left-1/2 -translate-x-1/2",
+        "rounded-xl shadow-2xl bg-transparent border border-border/30",
+        "backdrop-blur-md",
+        "transition-all duration-300 ease-in-out",
+        !isOpen && "w-[360px] max-w-[85vw]",
+        !isOpen && isHovered && "w-[400px] scale-105",
+        isOpen && "w-full max-w-sm md:max-w-md right-6 left-auto translate-x-0",
+        isOpen && "ring-1 ring-border/20",
         className,
       )}
       {...props}
@@ -170,7 +164,6 @@ CollapsibleContainer.displayName = "CollapsibleContainer";
  */
 interface CollapsibleTriggerProps {
   isOpen: boolean;
-  layoutMode?: "floatingBar" | "pushSidebar";
   shortcutText: string;
   onClose: () => void;
   onThreadChange: () => void;
@@ -275,7 +268,6 @@ const CompactInput = ({
  */
 const CollapsibleTrigger = ({
   isOpen,
-  layoutMode = "pushSidebar",
   shortcutText,
   onClose,
   onThreadChange,
@@ -283,12 +275,12 @@ const CollapsibleTrigger = ({
   onOpen,
 }: CollapsibleTriggerProps & { onOpen: () => void }) => (
   <>
-    {(!isOpen || layoutMode === "floatingBar") && (
+    {!isOpen && (
       <div className="p-2">
         <CompactInput shortcutText={shortcutText} onOpen={onOpen} />
       </div>
     )}
-    {isOpen && layoutMode === "pushSidebar" && (
+    {isOpen && (
       <div className="flex items-center justify-between w-full p-2.5 border-b border-border/30 bg-transparent backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <span className="font-medium text-xs">{config.labels.openState}</span>
@@ -315,36 +307,11 @@ export const MessageThreadCollapsible = React.forwardRef<
   MessageThreadCollapsibleProps
 >(
   (
-    {
-      className,
-      defaultOpen = false,
-      open: controlledOpen,
-      onOpenChange: controlledOnOpenChange,
-      layoutMode = "pushSidebar",
-      variant,
-      height,
-      maxHeight,
-      ...props
-    },
+    { className, defaultOpen = false, variant, height, maxHeight, ...props },
     ref,
   ) => {
-    const uncontrolled = useCollapsibleState(defaultOpen);
-    const isControlled = controlledOpen !== undefined && controlledOnOpenChange !== undefined;
-    const isOpen = isControlled ? controlledOpen : uncontrolled.isOpen;
-    const controlledSetOpen = React.useCallback(
-      (value: boolean | ((prev: boolean) => boolean)) => {
-        const next = typeof value === "function" ? value(isOpen) : value;
-        controlledOnOpenChange?.(next);
-      },
-      [controlledOnOpenChange, isOpen],
-    );
-    const setIsOpen = React.useMemo(
-      () => (isControlled ? controlledSetOpen : uncontrolled.setIsOpen),
-      [isControlled, controlledSetOpen, uncontrolled.setIsOpen],
-    );
-    const shortcutText = uncontrolled.shortcutText;
-    const isHovered = uncontrolled.isHovered;
-    const setIsHovered = uncontrolled.setIsHovered;
+    const { isOpen, setIsOpen, shortcutText, isHovered, setIsHovered } =
+      useCollapsibleState(defaultOpen);
 
     // Backward compatibility: prefer height, fall back to maxHeight
     const effectiveHeight = height ?? maxHeight;
@@ -407,7 +374,7 @@ export const MessageThreadCollapsible = React.forwardRef<
 
     return (
       <div
-        onMouseEnter={() => layoutMode === "floatingBar" && setIsHovered(true)}
+        onMouseEnter={() => !isOpen && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         <CollapsibleContainer
@@ -415,24 +382,24 @@ export const MessageThreadCollapsible = React.forwardRef<
           isOpen={isOpen}
           onOpenChange={setIsOpen}
           isHovered={isHovered}
-          layoutMode={layoutMode}
           className={className}
           {...props}
         >
           <CollapsibleTrigger
             isOpen={isOpen}
-            layoutMode={layoutMode}
             shortcutText={shortcutText}
             onClose={() => setIsOpen(false)}
             onThreadChange={handleThreadChange}
             onOpen={handleOpen}
             config={THREAD_CONFIG}
           />
-          {layoutMode === "pushSidebar" && (
-          <Collapsible.Content className="overflow-hidden flex-1 min-h-0 flex flex-col">
+          <Collapsible.Content className="overflow-hidden">
             <div
-              className="flex flex-col flex-1 min-h-0 bg-transparent backdrop-blur-md"
-              style={effectiveHeight ? { height: effectiveHeight } : { minHeight: 0 }}
+              className={cn(
+                "flex flex-col bg-transparent backdrop-blur-md",
+                effectiveHeight ? "" : "h-[80vh] max-h-[calc(100vh-8rem)]",
+              )}
+              style={effectiveHeight ? { height: effectiveHeight } : undefined}
             >
               {/* Message thread content */}
               <ScrollableMessageContainer className="p-2.5 flex-1">
@@ -471,7 +438,6 @@ export const MessageThreadCollapsible = React.forwardRef<
               </MessageSuggestions>
             </div>
           </Collapsible.Content>
-          )}
         </CollapsibleContainer>
       </div>
     );
