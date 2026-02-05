@@ -83,7 +83,8 @@ export default async function PRDetailPage({
 }) {
   const { id: owner, prNumber } = await params
   const { repo: repoName } = await searchParams
-  const session = await auth()
+  const session = await auth();
+
 
   if (!repoName) {
     return (
@@ -190,7 +191,7 @@ export default async function PRDetailPage({
           PR #{pr.number}
         </span>
       </div>
-
+  
       {/* Header */}
       <header className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
