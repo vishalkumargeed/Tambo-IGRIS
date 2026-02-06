@@ -130,6 +130,54 @@ function SidebarProvider({
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [toggleSidebar])
 
+  // Ctrl+K: when right sidebar is collapsed, open it and focus the message input
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+        const rightCollapsed = isMobile ? !openMobileRight : !openRight
+        if (rightCollapsed) {
+          event.preventDefault()
+          if (isMobile) {
+            setOpenMobileRight(true)
+          } else {
+            setOpenRight(true)
+          }
+          // Focus the message input after the sidebar has expanded
+          const focusInput = () => {
+            const el = document.querySelector<HTMLElement>(
+              "#message-thread-input [contenteditable=\"true\"]"
+            )
+            el?.focus()
+          }
+          requestAnimationFrame(() => {
+            requestAnimationFrame(focusInput)
+          })
+        }
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [isMobile, openRight, openMobileRight, setOpenRight, setOpenMobileRight])
+
+  // Escape: collapse the right sidebar when it is open
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        const rightOpen = isMobile ? openMobileRight : openRight
+        if (rightOpen) {
+          event.preventDefault()
+          if (isMobile) {
+            setOpenMobileRight(false)
+          } else {
+            setOpenRight(false)
+          }
+        }
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [isMobile, openRight, openMobileRight, setOpenRight, setOpenMobileRight])
+
   const state = open ? "expanded" : "collapsed"
   const stateRight = openRight ? "expanded" : "collapsed"
 

@@ -66,15 +66,17 @@ export interface MessageThreadCollapsibleProps extends React.HTMLAttributes<HTML
  */
 
 /**
- * Custom hook for managing collapsible state with keyboard shortcuts
+ * Custom hook for managing collapsible state with keyboard shortcuts.
+ * When embedded (e.g. in right sidebar), Ctrl+K is handled by the sidebar to open and focus; no local shortcut.
  */
-const useCollapsibleState = (defaultOpen = false) => {
+const useCollapsibleState = (defaultOpen = false, embedded = false) => {
   const [isOpen, setIsOpen] = React.useState(defaultOpen);
   const isMac =
     typeof navigator !== "undefined" && navigator.platform.startsWith("Mac");
   const shortcutText = isMac ? "⌘K" : "Ctrl+K";
 
   React.useEffect(() => {
+    if (embedded) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
         event.preventDefault();
@@ -84,7 +86,7 @@ const useCollapsibleState = (defaultOpen = false) => {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [embedded]);
 
   return { isOpen, setIsOpen, shortcutText };
 };
@@ -202,7 +204,7 @@ export const MessageThreadCollapsible = React.forwardRef<
     ref,
   ) => {
     const { isOpen, setIsOpen, shortcutText } =
-      useCollapsibleState(defaultOpen);
+      useCollapsibleState(defaultOpen, embedded);
 
     // Backward compatibility: prefer height, fall back to maxHeight
     const effectiveHeight = height ?? maxHeight;
@@ -282,8 +284,8 @@ export const MessageThreadCollapsible = React.forwardRef<
               <MessageSuggestionsStatus />
             </MessageSuggestions>
 
-            {/* Message input - fixed at bottom, does not shift */}
-            <div className="shrink-0 p-4">
+            {/* Message input - fixed at bottom, does not shift; id for Ctrl+K focus target */}
+            <div id="message-thread-input" className="shrink-0 p-4">
               <MessageInput>
                 <MessageInputTextarea placeholder="Type your message or paste images..." />
                 <MessageInputToolbar>
