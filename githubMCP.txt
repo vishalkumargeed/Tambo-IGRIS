@@ -1,0 +1,409 @@
+List of tools and usage of Github MCP  server 
+
+
+Server Information
+Server Version
+github-mcp-server github-mcp-server/remote-2c702c4805cf0f67a60d53911f03fc7d575ddd9a
+
+Instructions
+The GitHub MCP Server provides tools to interact with GitHub platform.
+
+Tool selection guidance:
+	1. Use 'list_*' tools for broad, simple retrieval and pagination of all items of a type (e.g., all issues, all PRs, all branches) with basic filtering.
+	2. Use 'search_*' tools for targeted queries with specific criteria, keywords, or complex filters (e.g., issues with certain text, PRs by author, code containing functions).
+
+Context management:
+	1. Use pagination whenever possible with batches of 5-10 items.
+	2. Use minimal_output parameter set to true if the full information is not needed to accomplish a task.
+
+Tool usage guidance:
+	1. For 'search_*' tools: Use separate 'sort' and 'order' parameters if available for sorting results - do not include 'sort:' syntax in query strings. Query strings should contain only search criteria (e.g., 'org:google language:python'), not sorting instructions. Always call 'get_me' first to understand current user permissions and context. ## Issues
+
+Check 'list_issue_types' first for organizations to use proper issue types. Use 'search_issues' before creating new issues to avoid duplicates. Always set 'state_reason' when closing issues. ## Pull Requests
+
+PR review workflow: Always use 'pull_request_review_write' with method 'create' to create a pending review, then 'add_comment_to_pending_review' to add comments, and finally 'pull_request_review_write' with method 'submit_pending' to submit the review for complex reviews with line-specific comments.
+
+Before creating a pull request, search for pull request templates in the repository. Template files are called pull_request_template.md or they're located in '.github/PULL_REQUEST_TEMPLATE' directory. Use the template content to structure the PR description and then call create_pull_request tool.
+
+Here are common scenarios you may encounter, followed by a description of the steps to follow and the tools to use. Match these to user requests:
+If the user is bootstrapping a new project, you MUST always follow this workflow:
+- STEP 1: Set up a repository for the project unless one has already been set up by the user.
+- STEP 2: If a repository for the project exists, use issues tools to create at least one tracking issue for the project.
+
+Capabilities
+completions:
+prompts:
+resources:
+tools:
+Available Tools
+add_comment_to_pending_review
+Add review comment to the requester's latest pending pull request review. A pending review needs to already exist to call this (check with the user if not sure).
+
+Parameters:
+body- The text of the review comment
+line- The line of the blob in the pull request diff that the comment applies to. For multi-line comments, the last line of the range
+owner- Repository owner
+path- The relative path to the file that necessitates a comment
+pullNumber- Pull request number
+repo- Repository name
+side- The side of the diff to comment on. LEFT indicates the previous state, RIGHT indicates the new state
+startLine- For multi-line comments, the first line of the range that the comment applies to
+startSide- For multi-line comments, the starting side of the diff that the comment applies to. LEFT indicates the previous state, RIGHT indicates the new state
+subjectType- The level at which the comment is targeted
+add_issue_comment
+Add a comment to a specific issue in a GitHub repository. Use this tool to add comments to pull requests as well (in this case pass pull request number as issue_number), but only if user is not asking specifically to add review comments.
+
+Parameters:
+body- Comment content
+issue_number- Issue number to comment on
+owner- Repository owner
+repo- Repository name
+assign_copilot_to_issue
+Assign Copilot to a specific issue in a GitHub repository. This tool can help with the following outcomes: - a Pull Request created with source code changes to resolve the issue More information can be found at: - https://docs.github.com/en/copilot/using-github-copilot/using-copilot-coding-agent-to-work-on-tasks/about-assigning-tasks-to-copilot
+
+Parameters:
+base_ref- Git reference (e.g., branch) that the agent will start its work from. If not specified, defaults to the repository's default branch
+custom_instructions- Optional custom instructions to guide the agent beyond the issue body. Use this to provide additional context, constraints, or guidance that is not captured in the issue description
+issue_number- Issue number
+owner- Repository owner
+repo- Repository name
+create_branch
+Create a new branch in a GitHub repository
+
+Parameters:
+branch- Name for new branch
+from_branch- Source branch (defaults to repo default)
+owner- Repository owner
+repo- Repository name
+create_or_update_file
+Create or update a single file in a GitHub repository. If updating, you should provide the SHA of the file you want to update. Use this tool to create or update a file in a GitHub repository remotely; do not use it for local file operations. In order to obtain the SHA of original file version before updating, use the following git command: git ls-tree HEAD <path to file> If the SHA is not provided, the tool will attempt to acquire it by fetching the current file contents from the repository, which may lead to rewriting latest committed changes if the file has changed since last retrieval.
+
+Parameters:
+branch- Branch to create/update the file in
+content- Content of the file
+message- Commit message
+owner- Repository owner (username or organization)
+path- Path where to create/update the file
+repo- Repository name
+sha- The blob SHA of the file being replaced.
+create_pull_request
+Create a new pull request in a GitHub repository.
+
+Parameters:
+base- Branch to merge into
+body- PR description
+draft- Create as draft PR
+head- Branch containing changes
+maintainer_can_modify- Allow maintainer edits
+owner- Repository owner
+repo- Repository name
+title- PR title
+create_repository
+Create a new GitHub repository in your account or specified organization
+
+Parameters:
+autoInit- Initialize with README
+description- Repository description
+name- Repository name
+organization- Organization to create the repository in (omit to create in your personal account)
+private- Whether repo should be private
+delete_file
+Delete a file from a GitHub repository
+
+Parameters:
+branch- Branch to delete the file from
+message- Commit message
+owner- Repository owner (username or organization)
+path- Path to the file to delete
+repo- Repository name
+fork_repository
+Fork a GitHub repository to your account or specified organization
+
+Parameters:
+organization- Organization to fork to
+owner- Repository owner
+repo- Repository name
+get_commit
+Get details for a commit from a GitHub repository
+
+Parameters:
+include_diff- Whether to include file diffs and stats in the response. Default is true.
+owner- Repository owner
+page- Page number for pagination (min 1)
+perPage- Results per page for pagination (min 1, max 100)
+repo- Repository name
+sha- Commit SHA, branch name, or tag name
+get_file_contents
+Get the contents of a file or directory from a GitHub repository
+
+Parameters:
+owner- Repository owner (username or organization)
+path- Path to file/directory
+ref- Accepts optional git refs such as `refs/tags/{tag}`, `refs/heads/{branch}` or `refs/pull/{pr_number}/head`
+repo- Repository name
+sha- Accepts optional commit SHA. If specified, it will be used instead of ref
+get_label
+Get a specific label from a repository.
+
+Parameters:
+name- Label name.
+owner- Repository owner (username or organization name)
+repo- Repository name
+get_latest_release
+Get the latest release in a GitHub repository
+
+Parameters:
+owner- Repository owner
+repo- Repository name
+get_me
+Get details of the authenticated GitHub user. Use this when a request is about the user's own profile for GitHub. Or when information is missing to build other tool calls.
+
+Parameters:
+get_release_by_tag
+Get a specific release by its tag name in a GitHub repository
+
+Parameters:
+owner- Repository owner
+repo- Repository name
+tag- Tag name (e.g., 'v1.0.0')
+get_tag
+Get details about a specific git tag in a GitHub repository
+
+Parameters:
+owner- Repository owner
+repo- Repository name
+tag- Tag name
+get_team_members
+Get member usernames of a specific team in an organization. Limited to organizations accessible with current credentials
+
+Parameters:
+org- Organization login (owner) that contains the team.
+team_slug- Team slug
+get_teams
+Get details of the teams the user is a member of. Limited to organizations accessible with current credentials
+
+Parameters:
+user- Username to get teams for. If not provided, uses the authenticated user.
+issue_read
+Get information about a specific issue in a GitHub repository.
+
+Parameters:
+issue_number- The number of the issue
+method- The read operation to perform on a single issue. Options are: 1. get - Get details of a specific issue. 2. get_comments - Get issue comments. 3. get_sub_issues - Get sub-issues of the issue. 4. get_labels - Get labels assigned to the issue.
+owner- The owner of the repository
+page- Page number for pagination (min 1)
+perPage- Results per page for pagination (min 1, max 100)
+repo- The name of the repository
+issue_write
+Create a new or update an existing issue in a GitHub repository.
+
+Parameters:
+assignees- Usernames to assign to this issue
+body- Issue body content
+duplicate_of- Issue number that this issue is a duplicate of. Only used when state_reason is 'duplicate'.
+issue_number- Issue number to update
+labels- Labels to apply to this issue
+method- Write operation to perform on a single issue. Options are: - 'create' - creates a new issue. - 'update' - updates an existing issue.
+milestone- Milestone number
+owner- Repository owner
+repo- Repository name
+state- New state
+state_reason- Reason for the state change. Ignored unless state is changed.
+title- Issue title
+type- Type of this issue. Only use if the repository has issue types configured. Use list_issue_types tool to get valid type values for the organization. If the repository doesn't support issue types, omit this parameter.
+list_branches
+List branches in a GitHub repository
+
+Parameters:
+owner- Repository owner
+page- Page number for pagination (min 1)
+perPage- Results per page for pagination (min 1, max 100)
+repo- Repository name
+list_commits
+Get list of commits of a branch in a GitHub repository. Returns at least 30 results per page by default, but can return more if specified using the perPage parameter (up to 100).
+
+Parameters:
+author- Author username or email address to filter commits by
+owner- Repository owner
+page- Page number for pagination (min 1)
+perPage- Results per page for pagination (min 1, max 100)
+repo- Repository name
+sha- Commit SHA, branch or tag name to list commits of. If not provided, uses the default branch of the repository. If a commit SHA is provided, will list commits up to that SHA.
+list_issue_types
+List supported issue types for repository owner (organization).
+
+Parameters:
+owner- The organization owner of the repository
+list_issues
+List issues in a GitHub repository. For pagination, use the 'endCursor' from the previous response's 'pageInfo' in the 'after' parameter.
+
+Parameters:
+after- Cursor for pagination. Use the endCursor from the previous page's PageInfo for GraphQL APIs.
+direction- Order direction. If provided, the 'orderBy' also needs to be provided.
+labels- Filter by labels
+orderBy- Order issues by field. If provided, the 'direction' also needs to be provided.
+owner- Repository owner
+perPage- Results per page for pagination (min 1, max 100)
+repo- Repository name
+since- Filter by date (ISO 8601 timestamp)
+state- Filter by state, by default both open and closed issues are returned when not provided
+list_pull_requests
+List pull requests in a GitHub repository. If the user specifies an author, then DO NOT use this tool and use the search_pull_requests tool instead.
+
+Parameters:
+base- Filter by base branch
+direction- Sort direction
+head- Filter by head user/org and branch
+owner- Repository owner
+page- Page number for pagination (min 1)
+perPage- Results per page for pagination (min 1, max 100)
+repo- Repository name
+sort- Sort by
+state- Filter by state
+list_releases
+List releases in a GitHub repository
+
+Parameters:
+owner- Repository owner
+page- Page number for pagination (min 1)
+perPage- Results per page for pagination (min 1, max 100)
+repo- Repository name
+list_tags
+List git tags in a GitHub repository
+
+Parameters:
+owner- Repository owner
+page- Page number for pagination (min 1)
+perPage- Results per page for pagination (min 1, max 100)
+repo- Repository name
+merge_pull_request
+Merge a pull request in a GitHub repository.
+
+Parameters:
+commit_message- Extra detail for merge commit
+commit_title- Title for merge commit
+merge_method- Merge method
+owner- Repository owner
+pullNumber- Pull request number
+repo- Repository name
+pull_request_read
+Get information on a specific pull request in GitHub repository.
+
+Parameters:
+method- Action to specify what pull request data needs to be retrieved from GitHub. Possible options: 1. get - Get details of a specific pull request. 2. get_diff - Get the diff of a pull request. 3. get_status - Get status of a head commit in a pull request. This reflects status of builds and checks. 4. get_files - Get the list of files changed in a pull request. Use with pagination parameters to control the number of results returned. 5. get_review_comments - Get review threads on a pull request. Each thread contains logically grouped review comments made on the same code location during pull request reviews. Returns threads with metadata (isResolved, isOutdated, isCollapsed) and their associated comments. Use cursor-based pagination (perPage, after) to control results. 6. get_reviews - Get the reviews on a pull request. When asked for review comments, use get_review_comments method. 7. get_comments - Get comments on a pull request. Use this if user doesn't specifically want review comments. Use with pagination parameters to control the number of results returned.
+owner- Repository owner
+page- Page number for pagination (min 1)
+perPage- Results per page for pagination (min 1, max 100)
+pullNumber- Pull request number
+repo- Repository name
+pull_request_review_write
+Create and/or submit, delete review of a pull request. Available methods: - create: Create a new review of a pull request. If "event" parameter is provided, the review is submitted. If "event" is omitted, a pending review is created. - submit_pending: Submit an existing pending review of a pull request. This requires that a pending review exists for the current user on the specified pull request. The "body" and "event" parameters are used when submitting the review. - delete_pending: Delete an existing pending review of a pull request. This requires that a pending review exists for the current user on the specified pull request.
+
+Parameters:
+body- Review comment text
+commitID- SHA of commit to review
+event- Review action to perform.
+method- The write operation to perform on pull request review.
+owner- Repository owner
+pullNumber- Pull request number
+repo- Repository name
+push_files
+Push multiple files to a GitHub repository in a single commit
+
+Parameters:
+branch- Branch to push to
+files- Array of file objects to push, each object with path (string) and content (string)
+message- Commit message
+owner- Repository owner
+repo- Repository name
+request_copilot_review
+Request a GitHub Copilot code review for a pull request. Use this for automated feedback on pull requests, usually before requesting a human reviewer.
+
+Parameters:
+owner- Repository owner
+pullNumber- Pull request number
+repo- Repository name
+search_code
+Fast and precise code search across ALL GitHub repositories using GitHub's native search engine. Best for finding exact symbols, functions, classes, or specific code patterns.
+
+Parameters:
+order- Sort order for results
+page- Page number for pagination (min 1)
+perPage- Results per page for pagination (min 1, max 100)
+query- Search query using GitHub's powerful code search syntax. Examples: 'content:Skill language:Java org:github', 'NOT is:archived language:Python OR language:go', 'repo:github/github-mcp-server'. Supports exact matching, language filters, path filters, and more.
+sort- Sort field ('indexed' only)
+search_issues
+Search for issues in GitHub repositories using issues search syntax already scoped to is:issue
+
+Parameters:
+order- Sort order
+owner- Optional repository owner. If provided with repo, only issues for this repository are listed.
+page- Page number for pagination (min 1)
+perPage- Results per page for pagination (min 1, max 100)
+query- Search query using GitHub issues search syntax
+repo- Optional repository name. If provided with owner, only issues for this repository are listed.
+sort- Sort field by number of matches of categories, defaults to best match
+search_pull_requests
+Search for pull requests in GitHub repositories using issues search syntax already scoped to is:pr
+
+Parameters:
+order- Sort order
+owner- Optional repository owner. If provided with repo, only pull requests for this repository are listed.
+page- Page number for pagination (min 1)
+perPage- Results per page for pagination (min 1, max 100)
+query- Search query using GitHub pull request search syntax
+repo- Optional repository name. If provided with owner, only pull requests for this repository are listed.
+sort- Sort field by number of matches of categories, defaults to best match
+search_repositories
+Find GitHub repositories by name, description, readme, topics, or other metadata. Perfect for discovering projects, finding examples, or locating specific repositories across GitHub.
+
+Parameters:
+minimal_output- Return minimal repository information (default: true). When false, returns full GitHub API repository objects.
+order- Sort order
+page- Page number for pagination (min 1)
+perPage- Results per page for pagination (min 1, max 100)
+query- Repository search query. Examples: 'machine learning in:name stars:>1000 language:python', 'topic:react', 'user:facebook'. Supports advanced search syntax for precise filtering.
+sort- Sort repositories by field, defaults to best match
+search_users
+Find GitHub users by username, real name, or other profile information. Useful for locating developers, contributors, or team members.
+
+Parameters:
+order- Sort order
+page- Page number for pagination (min 1)
+perPage- Results per page for pagination (min 1, max 100)
+query- User search query. Examples: 'john smith', 'location:seattle', 'followers:>100'. Search is automatically scoped to type:user.
+sort- Sort users by number of followers or repositories, or when the person joined GitHub.
+sub_issue_write
+Add a sub-issue to a parent issue in a GitHub repository.
+
+Parameters:
+after_id- The ID of the sub-issue to be prioritized after (either after_id OR before_id should be specified)
+before_id- The ID of the sub-issue to be prioritized before (either after_id OR before_id should be specified)
+issue_number- The number of the parent issue
+method- The action to perform on a single sub-issue Options are: - 'add' - add a sub-issue to a parent issue in a GitHub repository. - 'remove' - remove a sub-issue from a parent issue in a GitHub repository. - 'reprioritize' - change the order of sub-issues within a parent issue in a GitHub repository. Use either 'after_id' or 'before_id' to specify the new position.
+owner- Repository owner
+replace_parent- When true, replaces the sub-issue's current parent issue. Use with 'add' method only.
+repo- Repository name
+sub_issue_id- The ID of the sub-issue to add. ID is not the same as issue number
+update_pull_request
+Update an existing pull request in a GitHub repository.
+
+Parameters:
+base- New base branch name
+body- New description
+draft- Mark pull request as draft (true) or ready for review (false)
+maintainer_can_modify- Allow maintainer edits
+owner- Repository owner
+pullNumber- Pull request number to update
+repo- Repository name
+reviewers- GitHub usernames to request reviews from
+state- New state
+title- New title
+update_pull_request_branch
+Update the branch of a pull request with the latest changes from the base branch.
+
+Parameters:
+expectedHeadSha- The expected SHA of the pull request's HEAD ref
+owner- Repository owner
+pullNumber- Pull request number
+repo- Repository name

@@ -1,0 +1,260 @@
+import { auth } from "@/auth"
+import Link from "next/link"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination"
+
+const REPOS_PER_PAGE = 10
+
+type GitHubRepo = {
+  id: number
+  name: string
+  full_name: string
+  private: boolean
+  html_url: string
+  description: string | null
+  stargazers_count: number
+  language: string | null
+  updated_at: string
+  owner: { login: string }
+}
+
+function getLastPageFromLink(linkHeader: string | null): number {
+  if (!linkHeader) return 1
+  const match = linkHeader.match(/[?&]page=(\d+)[^>]*>;\s*rel="last"/)
+  return match ? parseInt(match[1], 10) : 1
+}
+
+async function fetchUserRepos(
+  accessToken: string,
+  page: number
+): Promise<{ repos: GitHubRepo[]; totalPages: number }> {
+  const res = await fetch(
+    `https://api.github.com/user/repos?per_page=${REPOS_PER_PAGE}&page=${page}&sort=updated`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/vnd.github.v3+json",
+      },
+      next: { revalidate: 60 },
+    }
+  )
+  if (!res.ok) throw new Error("Failed to fetch repos")
+  const repos: GitHubRepo[] = await res.json()
+  const linkHeader = res.headers.get("link")
+  const totalPagesFromLink = getLastPageFromLink(linkHeader)
+  // GitHub omits rel="last" when you're on the last page, so fall back to current page
+  const totalPages =
+    totalPagesFromLink > 1 ? totalPagesFromLink : Math.max(1, page)
+  return { repos, totalPages }
+}
+
+export default async function RepoList({
+  currentPage = 1,
+}: {
+  currentPage?: number
+}) {
+  const session = await auth()
+  if (!session?.user) return null
+
+  const accessToken = session.accessToken
+  if (!accessToken) {
+    return (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+        <p className="font-medium">Repo access not available</p>
+        <p className="mt-1 text-sm">Sign out and sign in again to grant repo access.</p>
+      </div>
+    )
+  }
+
+  let repos: GitHubRepo[] = []
+  let totalPages = 1
+  try {
+    const result = await fetchUserRepos(accessToken, currentPage)
+    repos = result.repos
+    totalPages = result.totalPages
+  } catch {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
+        <p className="font-medium">Failed to load repositories</p>
+        <p className="mt-1 text-sm">Check your connection or try again later.</p>
+      </div>
+    )
+  }
+
+  const publicRepos = repos.filter((r) => !r.private)
+  const privateRepos = repos.filter((r) => r.private)
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-2 border-b border-neutral-200 pb-4 dark:border-neutral-700">
+        <div>
+          <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+            {session.user.name ?? "User"}
+          </h2>
+          {session.user.email && (
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              {session.user.email}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="rounded-lg border border-neutral-200 bg-neutral-50/50 p-3 dark:border-neutral-700 dark:bg-neutral-900/50">
+          <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+            Public repos
+          </p>
+          <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+            {publicRepos.length}
+          </p>
+        </div>
+        <div className="rounded-lg border border-neutral-200 bg-neutral-50/50 p-3 dark:border-neutral-700 dark:bg-neutral-900/50">
+          <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+            Private repos
+          </p>
+          <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+            {privateRepos.length}
+          </p>
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            Your repositories
+          </h3>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            Most recently updated · Page {currentPage} of {totalPages}
+          </p>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[180px]">Repository</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="w-[100px]">Visibility</TableHead>
+              <TableHead className="w-[100px]">Language</TableHead>
+              <TableHead className="w-[80px] text-right">Stars</TableHead>
+              <TableHead className="w-[70px]">Link</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {repos.map((repo) => (
+              <TableRow key={repo.id}>
+                <TableCell className="font-medium">
+                  <Link
+                    href={`/repo/${encodeURIComponent(repo.owner.login)}?repo=${encodeURIComponent(repo.name)}`}
+                    className="text-blue-600 hover:underline dark:text-blue-400 break-all"
+                  >
+                    {repo.full_name}
+                  </Link>
+                </TableCell>
+                <TableCell className="max-w-xs truncate text-muted-foreground">
+                  {repo.description || "—"}
+                </TableCell>
+                <TableCell>
+                  <span
+                    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                      repo.private
+                        ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200"
+                        : "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"
+                    }`}
+                  >
+                    {repo.private ? "Private" : "Public"}
+                  </span>
+                </TableCell>
+                <TableCell>{repo.language || "—"}</TableCell>
+                <TableCell className="text-right">{repo.stargazers_count}</TableCell>
+                <TableCell>
+                  <Link
+                    href={`/repo/${encodeURIComponent(repo.owner.login)}?repo=${encodeURIComponent(repo.name)}`}
+                    className="text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    View
+                  </Link>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+
+        {totalPages > 1 && (
+          <Pagination className="mt-4">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href={currentPage > 1 ? `/dashboard?page=${currentPage - 1}` : "#"}
+                  aria-disabled={currentPage <= 1}
+                  className={
+                    currentPage <= 1
+                      ? "pointer-events-none opacity-50"
+                      : undefined
+                  }
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => {
+                  if (totalPages <= 7) return true
+                  if (p === 1 || p === totalPages) return true
+                  if (Math.abs(p - currentPage) <= 1) return true
+                  return false
+                })
+                .reduce<number[]>((acc, p) => {
+                  const last = acc[acc.length - 1]
+                  if (last !== undefined && p - last > 1) acc.push(-1)
+                  acc.push(p)
+                  return acc
+                }, [])
+                .map((p, idx) =>
+                  p === -1 ? (
+                    <PaginationItem key={`ellipsis-${idx}`}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  ) : (
+                    <PaginationItem key={p}>
+                      <PaginationLink
+                        href={`/dashboard?page=${p}`}
+                        isActive={p === currentPage}
+                      >
+                        {p}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                )}
+              <PaginationItem>
+                <PaginationNext
+                  href={
+                    currentPage < totalPages
+                      ? `/dashboard?page=${currentPage + 1}`
+                      : "#"
+                  }
+                  aria-disabled={currentPage >= totalPages}
+                  className={
+                    currentPage >= totalPages
+                      ? "pointer-events-none opacity-50"
+                      : undefined
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
+      </div>
+    </div>
+  )
+}
