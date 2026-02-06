@@ -44,7 +44,9 @@ function writeToStorage(repo: RepoInfo) {
   }
 }
 
-export function RepoProvider({ children }: { children: React.ReactNode }) {
+const defaultContextValue = { repo: null as RepoInfo, setRepo: (() => {}) as (repo: RepoInfo) => void };
+
+function RepoProviderInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -97,6 +99,14 @@ export function RepoProvider({ children }: { children: React.ReactNode }) {
     <RepoContext.Provider value={{ repo, setRepo }}>
       {children}
     </RepoContext.Provider>
+  );
+}
+
+export function RepoProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <React.Suspense fallback={<RepoContext.Provider value={defaultContextValue}>{children}</RepoContext.Provider>}>
+      <RepoProviderInner>{children}</RepoProviderInner>
+    </React.Suspense>
   );
 }
 
