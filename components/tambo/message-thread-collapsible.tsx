@@ -22,6 +22,7 @@ import {
   ThreadContentMessages,
 } from "@/components/tambo/thread-content";
 import { ThreadDropdown } from "@/components/tambo/thread-dropdown";
+import { useRepoResourceProvider } from "@/lib/repo-resource-provider";
 import { cn } from "@/lib/utils";
 import { type Suggestion } from "@tambo-ai/react";
 import { type VariantProps } from "class-variance-authority";
@@ -213,6 +214,8 @@ export const MessageThreadCollapsible = React.forwardRef<
       setIsOpen(true);
     }, [setIsOpen]);
 
+    const repoResourceProvider = useRepoResourceProvider();
+
     /**
      * Configuration for the MessageThreadCollapsible component
      */
@@ -287,7 +290,10 @@ export const MessageThreadCollapsible = React.forwardRef<
             {/* Message input - fixed at bottom, does not shift; id for Ctrl+K focus target */}
             <div id="message-thread-input" className="shrink-0 p-4">
               <MessageInput>
-                <MessageInputTextarea placeholder="Type message or Press 'ESC'" />
+                <MessageInputTextarea
+                  placeholder="Type message or Press 'ESC'"
+                  resourceProvider={repoResourceProvider}
+                />
                 <MessageInputToolbar>
                   <MessageInputFileButton />
                   <MessageInputMcpPromptButton />

@@ -231,7 +231,7 @@ function SuggestionPopover<T extends SuggestionItem>({
             {emptyMessage}
           </div>
         ) : (
-          <div className="flex flex-col gap-0.5 p-1">
+          <div className="flex flex-col gap-0.5 p-1 max-h-60 overflow-y-auto">
             {state.items.map((item, index) => (
               <button
                 key={item.id}
@@ -396,13 +396,15 @@ function createPromptCommandExtension(
           editor: this.editor,
           char: "/",
           items: ({ query, editor }) => {
-            // Only show prompts when editor is empty (except for the "/" and query)
-            const editorValue = editor.getText().replace("/", "").trim();
-            if (editorValue.length > 0) {
+            // Show prompts when the only content is the slash command (e.g. "/" or "/cre").
+            // Hide only when there is non-whitespace text *before* the "/".
+            const fullText = editor.getText();
+            const slashIndex = fullText.indexOf("/");
+            if (slashIndex > 0 && fullText.slice(0, slashIndex).trim().length > 0) {
               stateRef.current.setState({ isOpen: false });
               return [];
             }
-            // Trigger search - actual items come from props via stateRef
+            // Trigger search so parent can filter prompts/tools by query; items come from props via stateRef
             onSearchChange(query);
             return [];
           },
