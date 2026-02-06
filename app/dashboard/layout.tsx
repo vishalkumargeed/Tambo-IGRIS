@@ -9,26 +9,27 @@ import {
 } from "@/components/ui/sidebar"
 import { auth } from "@/auth"
 import { TamboProviderWithUser } from "@/components/tambo/tambo-provider-with-user"
+import { getGitHubLogin } from "@/lib/github-user"
 
-
-
-export default async  function Layout({ children }: { children: React.ReactNode }) {
-
-  
+export default async function Layout({ children }: { children: React.ReactNode }) {
   const session = await auth()
 
-  const rawToken = session?.accessToken
   const userToken =
-    rawToken && typeof rawToken === "string" && rawToken.includes(".") && rawToken.split(".").length >= 2
-      ? rawToken
+    typeof session?.accessToken === "string" && session.accessToken.length > 0
+      ? session.accessToken
       : undefined
+
+  const owner = userToken ? await getGitHubLogin(userToken) : null
+
+
 
   return (
     <TamboProviderWithUser
-    apiKey={process.env.NEXT_PUBLIC_TAMBO_API_KEY!}
-    userToken={userToken}
-    user={session?.user ?? undefined}
-  >
+      apiKey={process.env.NEXT_PUBLIC_TAMBO_API_KEY!}
+      userToken={userToken}
+      user={session?.user ?? undefined}
+      owner={owner ?? undefined}
+    >
 
 
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
