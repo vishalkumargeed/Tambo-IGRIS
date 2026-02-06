@@ -4,6 +4,11 @@ import * as React from "react"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
 
+import {
+  GitPullRequestIcon,
+  GitMergeIcon,
+  GitPullRequestClosedIcon,
+} from "@primer/octicons-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -57,12 +62,21 @@ function formatRelative(iso: string): string {
   }
 }
 
-function PRsTable({ prs }: { prs: PRItem[] }) {
+function PRsTable({
+  prs,
+  emptyLabel = "No pull requests in this state.",
+}: {
+  prs: PRItem[]
+  emptyLabel?: string
+}) {
   if (prs.length === 0) {
     return (
-      <p className="text-muted-foreground py-8 text-center text-sm">
-        No pull requests in this state.
-      </p>
+      <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+        <p className="text-muted-foreground text-sm">{emptyLabel}</p>
+        <p className="text-muted-foreground/80 text-xs">
+          Try changing the tab or repository.
+        </p>
+      </div>
     )
   }
   return (
@@ -93,16 +107,22 @@ function PRsTable({ prs }: { prs: PRItem[] }) {
               </Link>
             </TableCell>
             <TableCell>
-              <Badge
-                variant={pr.state === "open" ? "default" : "secondary"}
-                className={
-                  pr.state === "open"
-                    ? "bg-emerald-600 hover:bg-emerald-600"
-                    : ""
-                }
-              >
-                {pr.state === "open" ? "Open" : "Closed"}
-              </Badge>
+              {pr.state === "open" ? (
+                <Badge className="text-green-600 bg-[#3fb950]/15 hover:bg-[#3fb950]/25 border-0 gap-1">
+                  <GitPullRequestIcon size={14} />
+                  Open
+                </Badge>
+              ) : pr.merged_at ? (
+                <Badge className="text-purple-600 bg-[#8250df]/15 hover:bg-[#8250df]/25 border-0 gap-1">
+                  <GitMergeIcon size={14} />
+                  Merged
+                </Badge>
+              ) : (
+                <Badge className="text-purple-600 bg-[#8250df]/15 hover:bg-[#8250df]/25 border-0 gap-1">
+                  <GitPullRequestClosedIcon size={14} />
+                  Closed
+                </Badge>
+              )}
             </TableCell>
             <TableCell>
               {pr.user ? (
@@ -144,6 +164,8 @@ export default function DashboardPullRequestsPage() {
   const token = session?.accessToken
   const [openPRs, setOpenPRs] = React.useState<PRItem[]>([])
   const [closedPRs, setClosedPRs] = React.useState<PRItem[]>([])
+  const [mergedPRs, setMergedPRs] = React.useState<PRItem[]>([])
+  const [closedOnlyPRs, setClosedOnlyPRs] = React.useState<PRItem[]>([])
   const [loadingOpen, setLoadingOpen] = React.useState(true)
   const [loadingClosed, setLoadingClosed] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
@@ -152,6 +174,8 @@ export default function DashboardPullRequestsPage() {
     if (!repo || !token) {
       setOpenPRs([])
       setClosedPRs([])
+      setMergedPRs([])
+      setClosedOnlyPRs([])
       setLoadingOpen(false)
       setLoadingClosed(false)
       return
@@ -177,10 +201,23 @@ export default function DashboardPullRequestsPage() {
     )
       .then((res) => res.json())
       .then((body: { success?: boolean; data?: PRItem[] }) => {
-        if (body.success && Array.isArray(body.data)) setClosedPRs(body.data)
-        else setClosedPRs([])
+        if (body.success && Array.isArray(body.data)) {
+          const closed = body.data
+          setClosedPRs(closed)
+          setMergedPRs(closed.filter((pr) => pr.merged_at))
+          setClosedOnlyPRs(closed.filter((pr) => !pr.merged_at))
+        } else {
+          setClosedPRs([])
+          setMergedPRs([])
+          setClosedOnlyPRs([])
+        }
       })
-      .catch(() => setError("Failed to load closed PRs"))
+      .catch(() => {
+        setError("Failed to load closed PRs")
+        setClosedPRs([])
+        setMergedPRs([])
+        setClosedOnlyPRs([])
+      })
       .finally(() => setLoadingClosed(false))
   }, [repo, token])
 
@@ -213,7 +250,7 @@ export default function DashboardPullRequestsPage() {
         <CardHeader>
           <CardTitle>Pull Requests</CardTitle>
           <CardDescription>
-            Open and closed pull requests for {repo.fullName}
+            Open, merged, and closed pull requests for {repo.fullName}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -225,8 +262,11 @@ export default function DashboardPullRequestsPage() {
               <TabsTrigger value="open">
                 Open {loadingOpen ? <Spinner className="ml-1 inline size-3" /> : `(${openPRs.length})`}
               </TabsTrigger>
+              <TabsTrigger value="merged">
+                Merged {loadingClosed ? <Spinner className="ml-1 inline size-3" /> : `(${mergedPRs.length})`}
+              </TabsTrigger>
               <TabsTrigger value="closed">
-                Closed {loadingClosed ? <Spinner className="ml-1 inline size-3" /> : `(${closedPRs.length})`}
+                Closed {loadingClosed ? <Spinner className="ml-1 inline size-3" /> : `(${closedOnlyPRs.length})`}
               </TabsTrigger>
             </TabsList>
             <TabsContent value="open" className="mt-4">
@@ -236,7 +276,24 @@ export default function DashboardPullRequestsPage() {
                   <span>Loading open PRs…</span>
                 </div>
               ) : (
-                <PRsTable prs={openPRs} />
+                <div className="rounded-lg border border-border">
+                  <PRsTable prs={openPRs} emptyLabel="No open pull requests." />
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="merged" className="mt-4">
+              {loadingClosed ? (
+                <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground text-sm">
+                  <Spinner className="size-4" />
+                  <span>Loading merged PRs…</span>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-border bg-[#8250df]/5">
+                  <PRsTable
+                    prs={mergedPRs}
+                    emptyLabel="No merged pull requests."
+                  />
+                </div>
               )}
             </TabsContent>
             <TabsContent value="closed" className="mt-4">
@@ -246,7 +303,12 @@ export default function DashboardPullRequestsPage() {
                   <span>Loading closed PRs…</span>
                 </div>
               ) : (
-                <PRsTable prs={closedPRs} />
+                <div className="rounded-lg border border-border bg-muted/30">
+                  <PRsTable
+                    prs={closedOnlyPRs}
+                    emptyLabel="No closed pull requests."
+                  />
+                </div>
               )}
             </TabsContent>
           </Tabs>

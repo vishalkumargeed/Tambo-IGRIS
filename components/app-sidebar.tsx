@@ -2,26 +2,13 @@
 
 import * as React from "react"
 import {
-  IconCamera,
-  IconChartBar,
-  IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
-  IconInnerShadowTop,
-  IconListDetails,
-  IconReport,
-  IconSearch,
-  IconSettings,
-  IconUsers,
-} from "@tabler/icons-react"
+  IssueOpenedIcon,
+  GitPullRequestIcon,
+  CodeIcon,
+  MarkGithubIcon,
+} from "@primer/octicons-react"
 
-import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -43,17 +30,17 @@ const data = {
     {
       title: "Issues",
       url: "/dashboard/issues",
-      icon: IconDashboard,
+      icon: IssueOpenedIcon,
     },
     {
       title: "Pull Requests",
       url: "/dashboard/pull-requests",
-      icon: IconListDetails,
+      icon: GitPullRequestIcon,
     },
     {
       title: "Codebase",
       url: "/dashboard/code",
-      icon: IconChartBar,
+      icon: CodeIcon,
     },
   ],
  
@@ -74,8 +61,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 className="data-[slot=sidebar-menu-button]:!p-1.5 flex-1 min-w-0"
               >
                 <a href="/dashboard">
-                  <IconInnerShadowTop className="!size-5 shrink-0" />
-                  <span className="truncate text-base font-semibold">Tambo Sentinel</span>
+                  <MarkGithubIcon size={20} className="shrink-0" />
+                  <span className="truncate text-base font-semibold"> Sentinel</span>
                 </a>
               </SidebarMenuButton>
               <div className="group-data-[collapsible=icon]:hidden shrink-0">

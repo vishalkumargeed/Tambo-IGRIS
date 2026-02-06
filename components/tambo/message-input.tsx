@@ -770,7 +770,7 @@ export interface MessageInputTextareaProps extends React.HTMLAttributes<HTMLDivE
  */
 const MessageInputTextarea = ({
   className,
-  placeholder = "What do you want to do?",
+  placeholder = "Type message or Press 'ESC'",
   resourceProvider,
   promptProvider,
   onResourceSelect,
@@ -1034,7 +1034,7 @@ const MessageInputSubmitButton = React.forwardRef<
   };
 
   const buttonClasses = cn(
-    "w-10 h-10 bg-foreground text-background rounded-lg hover:bg-foreground/90 disabled:opacity-50 flex items-center justify-center enabled:cursor-pointer",
+    "w-10 h-10 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center enabled:cursor-pointer",
     className,
   );
 

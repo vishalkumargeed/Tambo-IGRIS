@@ -4,6 +4,10 @@ import * as React from "react"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
 
+import {
+  IssueOpenedIcon,
+  IssueClosedIcon,
+} from "@primer/octicons-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -55,12 +59,21 @@ function formatRelative(iso: string): string {
   }
 }
 
-function IssuesTable({ issues }: { issues: IssueItem[] }) {
+function IssuesTable({
+  issues,
+  emptyLabel = "No issues in this state.",
+}: {
+  issues: IssueItem[]
+  emptyLabel?: string
+}) {
   if (issues.length === 0) {
     return (
-      <p className="text-muted-foreground py-8 text-center text-sm">
-        No issues in this state.
-      </p>
+      <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+        <p className="text-muted-foreground text-sm">{emptyLabel}</p>
+        <p className="text-muted-foreground/80 text-xs">
+          Try changing the tab or repository.
+        </p>
+      </div>
     )
   }
   return (
@@ -95,11 +108,21 @@ function IssuesTable({ issues }: { issues: IssueItem[] }) {
                 variant={issue.state === "open" ? "default" : "secondary"}
                 className={
                   issue.state === "open"
-                    ? "bg-emerald-600 hover:bg-emerald-600"
-                    : ""
+                    ? "text-green-600 bg-[#3fb950]/15 hover:bg-[#3fb950]/25 border-0 gap-1"
+                    : "text-purple-600 bg-[#8250df]/15 hover:bg-[#8250df]/25 border-0 gap-1"
                 }
               >
-                {issue.state === "open" ? "Open" : "Closed"}
+                {issue.state === "open" ? (
+                  <>
+                    <IssueOpenedIcon size={14} />
+                    Open
+                  </>
+                ) : (
+                  <>
+                    <IssueClosedIcon size={14} />
+                    Closed
+                  </>
+                )}
               </Badge>
             </TableCell>
             <TableCell>
@@ -234,7 +257,12 @@ export default function DashboardIssuesPage() {
                   <span>Loading open issues…</span>
                 </div>
               ) : (
-                <IssuesTable issues={openIssues} />
+                <div className="rounded-lg border border-border">
+                  <IssuesTable
+                    issues={openIssues}
+                    emptyLabel="No open issues."
+                  />
+                </div>
               )}
             </TabsContent>
             <TabsContent value="closed" className="mt-4">
@@ -244,7 +272,12 @@ export default function DashboardIssuesPage() {
                   <span>Loading closed issues…</span>
                 </div>
               ) : (
-                <IssuesTable issues={closedIssues} />
+                <div className="rounded-lg border border-border bg-muted/30">
+                  <IssuesTable
+                  issues={closedIssues}
+                  emptyLabel="No closed issues."
+                />
+                </div>
               )}
             </TabsContent>
           </Tabs>

@@ -2,6 +2,12 @@
 
 import * as React from "react"
 import Link from "next/link"
+import {
+  GitMergeIcon,
+  GitPullRequestIcon,
+  IssueOpenedIcon,
+  IssueClosedIcon,
+} from "@primer/octicons-react"
 import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react"
 
 import {
@@ -54,7 +60,10 @@ export function SectionCards() {
       <Link href="/dashboard/pull-requests" className="block transition-opacity hover:opacity-95">
         <Card className="@container/card cursor-pointer">
           <CardHeader>
-            <CardDescription>Merged Pull Requests</CardDescription>
+            <CardDescription className="flex items-center gap-1.5">
+              <GitMergeIcon size={16} className="text-purple-600 shrink-0" />
+              Merged Pull Requests
+            </CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
               {repo ? (loading ? "…" : mergedPrs.toLocaleString()) : "—"}
             </CardTitle>
@@ -73,7 +82,10 @@ export function SectionCards() {
       <Link href="/dashboard/pull-requests" className="block transition-opacity hover:opacity-95">
         <Card className="@container/card cursor-pointer">
           <CardHeader>
-            <CardDescription>Open Pull Requests</CardDescription>
+            <CardDescription className="flex items-center gap-1.5">
+              <GitPullRequestIcon size={16} className="text-green-600 shrink-0" />
+              Open Pull Requests
+            </CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
               {repo ? (loading ? "…" : openPrs.toLocaleString()) : "—"}
             </CardTitle>
@@ -92,7 +104,10 @@ export function SectionCards() {
       <Link href="/dashboard/issues" className="block transition-opacity hover:opacity-95">
         <Card className="@container/card cursor-pointer">
           <CardHeader>
-            <CardDescription>New Issues</CardDescription>
+            <CardDescription className="flex items-center gap-1.5">
+              <IssueOpenedIcon size={16} className="text-green-600 shrink-0" />
+              New Issues
+            </CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
               {repo ? (loading ? "…" : openIssues.toLocaleString()) : "—"}
             </CardTitle>
@@ -111,7 +126,10 @@ export function SectionCards() {
       <Link href="/dashboard/issues" className="block transition-opacity hover:opacity-95">
         <Card className="@container/card cursor-pointer">
           <CardHeader>
-            <CardDescription>Closed Issues</CardDescription>
+            <CardDescription className="flex items-center gap-1.5">
+              <IssueClosedIcon size={16} className="text-purple-600 shrink-0" />
+              Closed Issues
+            </CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
               {repo ? (loading ? "…" : closedIssues.toLocaleString()) : "—"}
             </CardTitle>

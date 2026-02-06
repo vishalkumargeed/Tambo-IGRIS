@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { StarIcon } from "@primer/octicons-react"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -74,7 +75,10 @@ export function ChartAreaInteractive() {
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>Repo stars</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <StarIcon size={20} className="text-yellow-500 shrink-0" />
+          Repo stars
+        </CardTitle>
         <CardDescription>
           <span className="hidden @[540px]/card:block">
             New stars over the last {rangeLabel}

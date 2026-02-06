@@ -1,3 +1,4 @@
+import { StarIcon } from "@primer/octicons-react"
 import { auth } from "@/auth"
 import Link from "next/link"
 import {
@@ -179,7 +180,12 @@ export default async function RepoList({
                   </span>
                 </TableCell>
                 <TableCell>{repo.language || "—"}</TableCell>
-                <TableCell className="text-right">{repo.stargazers_count}</TableCell>
+                <TableCell className="text-right">
+                  <span className="inline-flex items-center justify-end gap-1 text-yellow-500">
+                    <StarIcon size={14} />
+                    {repo.stargazers_count}
+                  </span>
+                </TableCell>
                 <TableCell>
                   <Link
                     href={`/repo/${encodeURIComponent(repo.owner.login)}?repo=${encodeURIComponent(repo.name)}`}

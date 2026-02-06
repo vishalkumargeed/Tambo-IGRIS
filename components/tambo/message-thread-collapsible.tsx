@@ -287,7 +287,7 @@ export const MessageThreadCollapsible = React.forwardRef<
             {/* Message input - fixed at bottom, does not shift; id for Ctrl+K focus target */}
             <div id="message-thread-input" className="shrink-0 p-4">
               <MessageInput>
-                <MessageInputTextarea placeholder="Type your message or paste images..." />
+                <MessageInputTextarea placeholder="Type message or Press 'ESC'" />
                 <MessageInputToolbar>
                   <MessageInputFileButton />
                   <MessageInputMcpPromptButton />
