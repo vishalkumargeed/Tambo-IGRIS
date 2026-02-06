@@ -1,13 +1,13 @@
 import { RepoProvider } from "@/contexts/repo-context"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AppSidebar } from "@/components/app-sidebar"
+import { MessageThreadSidebar } from "@/components/message-thread-sidebar"
 import { SiteHeader } from "@/components/site-header"
 import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
 import { auth } from "@/auth"
-import { MessageThreadCollapsible } from "@/components/tambo/message-thread-collapsible"
 import { TamboProviderWithUser } from "@/components/tambo/tambo-provider-with-user"
 
 
@@ -46,6 +46,7 @@ export default async  function Layout({ children }: { children: React.ReactNode 
         <SiteHeader />
         {children}
       </SidebarInset>
+      <MessageThreadSidebar />
     </SidebarProvider>
 
    

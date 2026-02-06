@@ -258,16 +258,20 @@ export const MessageThreadCollapsible = React.forwardRef<
           onThreadChange={handleThreadChange}
           config={THREAD_CONFIG}
         />
-        <Collapsible.Content>
+        <Collapsible.Content
+          className={cn(
+            embedded && "flex min-h-0 flex-1 flex-col overflow-hidden",
+          )}
+        >
           <div
             className={cn(
               "flex flex-col",
-              embedded ? "min-h-0 flex-1" : effectiveHeight ? "" : "h-[80vh]",
+              embedded ? "min-h-0 flex-1 overflow-hidden" : effectiveHeight ? "" : "h-[80vh]",
             )}
             style={effectiveHeight && !embedded ? { height: effectiveHeight } : undefined}
           >
-            {/* Message thread content */}
-            <ScrollableMessageContainer className="p-4">
+            {/* Message thread content - scrollable, takes remaining space */}
+            <ScrollableMessageContainer className="p-4 min-h-0 flex-1">
               <ThreadContent variant={variant}>
                 <ThreadContentMessages />
               </ThreadContent>
@@ -278,8 +282,8 @@ export const MessageThreadCollapsible = React.forwardRef<
               <MessageSuggestionsStatus />
             </MessageSuggestions>
 
-            {/* Message input */}
-            <div className="p-4">
+            {/* Message input - fixed at bottom, does not shift */}
+            <div className="shrink-0 p-4">
               <MessageInput>
                 <MessageInputTextarea placeholder="Type your message or paste images..." />
                 <MessageInputToolbar>

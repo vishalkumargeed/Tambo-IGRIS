@@ -3,7 +3,6 @@
 import * as React from "react"
 import { usePathname } from "next/navigation"
 import { IconChevronDown } from "@tabler/icons-react"
-import { PanelRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -13,14 +12,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Spinner } from "@/components/ui/spinner"
-import { MessageThreadCollapsible } from "@/components/tambo/message-thread-collapsible"
 import { useRepo } from "@/contexts/repo-context"
 
 type RepoItem = { id: number; name: string; full_name: string; owner: string }
@@ -40,7 +34,6 @@ export function SiteHeader() {
   const [repos, setRepos] = React.useState<RepoItem[]>([])
   const [open, setOpen] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
-  const [rightSidebarOpen, setRightSidebarOpen] = React.useState(false)
   const title = getHeaderTitle(pathname)
 
   React.useEffect(() => {
@@ -109,32 +102,9 @@ export function SiteHeader() {
               )}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            onClick={() => setRightSidebarOpen(true)}
-            aria-label="Open message thread"
-          >
-            <PanelRight className="size-4" />
-          </Button>
+          <SidebarTrigger side="right" />
         </div>
       </div>
-      <Sheet open={rightSidebarOpen} onOpenChange={setRightSidebarOpen}>
-        <SheetContent
-          side="right"
-          className="bg-sidebar text-sidebar-foreground border-sidebar-border flex h-full w-full flex-col p-0 sm:max-w-md"
-          showCloseButton={true}
-        >
-          <div className="flex h-full min-h-0 flex-col">
-            <MessageThreadCollapsible
-              embedded
-              defaultOpen={true}
-              className="h-full min-h-0 flex-1"
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
     </header>
   )
 }
