@@ -48,6 +48,8 @@ export interface MessageThreadCollapsibleProps extends React.HTMLAttributes<HTML
   height?: string;
   /** @deprecated Use height instead. This prop will be removed in a future version. */
   maxHeight?: string;
+  /** When true, renders as a full-height panel (e.g. inside a sheet/sidebar) instead of a fixed floating panel. */
+  embedded?: boolean;
 }
 
 /**
@@ -68,44 +70,15 @@ export interface MessageThreadCollapsibleProps extends React.HTMLAttributes<HTML
  */
 const useCollapsibleState = (defaultOpen = false) => {
   const [isOpen, setIsOpen] = React.useState(defaultOpen);
-  const [isHovered, setIsHovered] = React.useState(false);
   const isMac =
     typeof navigator !== "undefined" && navigator.platform.startsWith("Mac");
   const shortcutText = isMac ? "⌘K" : "Ctrl+K";
 
-  // Use ref to track isOpen state to avoid dependency array issues
-  const isOpenRef = React.useRef(isOpen);
-  React.useEffect(() => {
-    isOpenRef.current = isOpen;
-  }, [isOpen]);
-
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Toggle with Ctrl+K / Cmd+K
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
         event.preventDefault();
-        const wasClosed = !isOpenRef.current;
-        setIsOpen((prev) => {
-          const newState = !prev;
-          // If opening the panel, focus the input after a short delay
-          if (wasClosed && newState) {
-            setTimeout(() => {
-              // Find the textarea/editor element and focus it
-              const textareaElement = document.querySelector(
-                '[data-slot="message-input-textarea"] textarea, [data-slot="message-input-textarea"] .ProseMirror',
-              ) as HTMLElement;
-              if (textareaElement) {
-                textareaElement.focus();
-              }
-            }, 100);
-          }
-          return newState;
-        });
-      }
-      // Close with Escape when open
-      if (event.key === "Escape" && isOpenRef.current) {
-        event.preventDefault();
-        setIsOpen(false);
+        setIsOpen((prev) => !prev);
       }
     };
 
@@ -113,7 +86,7 @@ const useCollapsibleState = (defaultOpen = false) => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  return { isOpen, setIsOpen, shortcutText, isHovered, setIsHovered };
+  return { isOpen, setIsOpen, shortcutText };
 };
 
 /**
@@ -123,6 +96,7 @@ interface CollapsibleContainerProps extends React.HTMLAttributes<HTMLDivElement>
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
+  embedded?: boolean;
 }
 
 /**
@@ -131,14 +105,16 @@ interface CollapsibleContainerProps extends React.HTMLAttributes<HTMLDivElement>
 const CollapsibleContainer = React.forwardRef<
   HTMLDivElement,
   CollapsibleContainerProps
->(({ className, isOpen, onOpenChange, children, ...props }, ref) => (
+>(({ className, isOpen, onOpenChange, children, embedded, ...props }, ref) => (
   <Collapsible.Root
     ref={ref}
     open={isOpen}
     onOpenChange={onOpenChange}
     className={cn(
-      "fixed bottom-4 right-4 w-full max-w-sm sm:max-w-md md:max-w-lg rounded-lg shadow-lg bg-background border border-border",
       "transition-all duration-300 ease-in-out",
+      embedded
+        ? "flex h-full w-full flex-col bg-background rounded-none border-0 shadow-none"
+        : "fixed bottom-4 right-4 w-full max-w-sm sm:max-w-md md:max-w-lg rounded-lg shadow-lg bg-background border border-border",
       className,
     )}
     {...props}
@@ -222,7 +198,7 @@ export const MessageThreadCollapsible = React.forwardRef<
   MessageThreadCollapsibleProps
 >(
   (
-    { className, defaultOpen = false, variant, height, maxHeight, ...props },
+    { className, defaultOpen = false, variant, height, maxHeight, embedded = false, ...props },
     ref,
   ) => {
     const { isOpen, setIsOpen, shortcutText } =
@@ -248,21 +224,21 @@ export const MessageThreadCollapsible = React.forwardRef<
     const defaultSuggestions: Suggestion[] = [
       {
         id: "suggestion-1",
-        title: "Table Summary",
-        detailedSuggestion: "Tell me the summary of the users table",
-        messageId: "summary-query",
+        title: "Get started",
+        detailedSuggestion: "What can you help me with?",
+        messageId: "welcome-query",
       },
       {
         id: "suggestion-2",
-        title: "Insert Data",
-        detailedSuggestion: "I want to enter some data into the users table",
-        messageId: "insert-query",
+        title: "Learn more",
+        detailedSuggestion: "Tell me about your capabilities.",
+        messageId: "capabilities-query",
       },
       {
         id: "suggestion-3",
-        title: "Who am I?",
-        detailedSuggestion: "Hey, who am I ?",
-        messageId: "identity-query",
+        title: "Examples",
+        detailedSuggestion: "Show me some example queries I can try.",
+        messageId: "examples-query",
       },
     ];
 
@@ -272,6 +248,7 @@ export const MessageThreadCollapsible = React.forwardRef<
         isOpen={isOpen}
         onOpenChange={setIsOpen}
         className={className}
+        embedded={embedded}
         {...props}
       >
         <CollapsibleTrigger
@@ -283,8 +260,11 @@ export const MessageThreadCollapsible = React.forwardRef<
         />
         <Collapsible.Content>
           <div
-            className={cn("flex flex-col", effectiveHeight ? "" : "h-[80vh]")}
-            style={effectiveHeight ? { height: effectiveHeight } : undefined}
+            className={cn(
+              "flex flex-col",
+              embedded ? "min-h-0 flex-1" : effectiveHeight ? "" : "h-[80vh]",
+            )}
+            style={effectiveHeight && !embedded ? { height: effectiveHeight } : undefined}
           >
             {/* Message thread content */}
             <ScrollableMessageContainer className="p-4">

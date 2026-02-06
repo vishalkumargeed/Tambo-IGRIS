@@ -1,16 +1,36 @@
 import { RepoProvider } from "@/contexts/repo-context"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AppSidebar } from "@/components/app-sidebar"
-
 import { SiteHeader } from "@/components/site-header"
 import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
+import { auth } from "@/auth"
+import { MessageThreadCollapsible } from "@/components/tambo/message-thread-collapsible"
+import { TamboProviderWithUser } from "@/components/tambo/tambo-provider-with-user"
 
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+
+export default async  function Layout({ children }: { children: React.ReactNode }) {
+
+  
+  const session = await auth()
+
+  const rawToken = session?.accessToken
+  const userToken =
+    rawToken && typeof rawToken === "string" && rawToken.includes(".") && rawToken.split(".").length >= 2
+      ? rawToken
+      : undefined
+
   return (
+    <TamboProviderWithUser
+    apiKey={process.env.NEXT_PUBLIC_TAMBO_API_KEY!}
+    userToken={userToken}
+    user={session?.user ?? undefined}
+  >
+
+
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <RepoProvider>
       <SidebarProvider
@@ -31,5 +51,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
    
       </RepoProvider>
     </ThemeProvider>
+    </TamboProviderWithUser>
   )
 }
