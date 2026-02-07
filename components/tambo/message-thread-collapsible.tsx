@@ -1,6 +1,8 @@
 "use client";
 
 import type { messageVariants } from "@/components/tambo/message";
+import { useTamboThread ,  useTamboThreadInput } from "@tambo-ai/react";
+import { ElicitationUI } from "./elicitation-ui";
 import {
   MessageInput,
   MessageInputError,

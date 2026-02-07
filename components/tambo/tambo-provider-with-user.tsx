@@ -4,6 +4,7 @@ import { TamboProvider } from "@tambo-ai/react";
 import { useSession } from "next-auth/react";
 import type { ReactNode } from "react";
 import { useEffect, useState, useMemo } from "react";
+import { components } from "@/lib/tambo";
 
 export interface TamboUserProfile {
   name?: string | null;
@@ -88,6 +89,7 @@ export function TamboProviderWithUser({
       apiKey={apiKey}
       userToken={userToken}
       contextHelpers={contextHelpers}
+      components={components}
     >
       {children}
     </TamboProvider>

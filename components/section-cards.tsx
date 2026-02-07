@@ -19,6 +19,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useRepo } from "@/contexts/repo-context"
+import { useDashboardCustomization } from "@/contexts/dashboard-customization-context"
+import { cn } from "@/lib/utils"
 
 type Counts = {
   mergedPrs: number
@@ -29,6 +31,7 @@ type Counts = {
 
 export function SectionCards() {
   const { repo } = useRepo()
+  const { merged } = useDashboardCustomization()
   const [counts, setCounts] = React.useState<Counts | null>(null)
   const [loading, setLoading] = React.useState(false)
 
@@ -55,8 +58,27 @@ export function SectionCards() {
   const openIssues = counts?.openIssues ?? 0
   const closedIssues = counts?.closedIssues ?? 0
 
+  const layoutClass =
+    merged.cardLayout === "compact"
+      ? "grid-cols-1 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 gap-3"
+      : merged.cardLayout === "minimal"
+        ? "grid-cols-1 @xl/main:grid-cols-2 gap-3"
+        : "grid-cols-1 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 gap-4"
+  const cardStyleClass =
+    merged.cardStyle === "bordered"
+      ? "[&_[data-slot=card]]:border-2 [&_[data-slot=card]]:border-border"
+      : merged.cardStyle === "flat"
+        ? "[&_[data-slot=card]]:border-0 [&_[data-slot=card]]:shadow-none"
+        : ""
+
   return (
-    <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+    <div
+      className={cn(
+        "*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6",
+        layoutClass,
+        cardStyleClass
+      )}
+    >
       <Link href="/dashboard/pull-requests" className="block transition-opacity hover:opacity-95">
         <Card className="@container/card cursor-pointer">
           <CardHeader>

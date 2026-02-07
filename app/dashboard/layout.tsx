@@ -1,5 +1,8 @@
 import { RepoProvider } from "@/contexts/repo-context"
 import { ThemeProvider } from "@/components/theme-provider"
+import { DashboardCustomizationProvider } from "@/contexts/dashboard-customization-context"
+import { DashboardThemeSync } from "@/components/dashboard-customization-sync"
+import { DashboardSidebarWrapper } from "@/components/dashboard-sidebar-wrapper"
 import { AppSidebar } from "@/components/app-sidebar"
 import { MessageThreadSidebar } from "@/components/message-thread-sidebar"
 import { SiteHeader } from "@/components/site-header"
@@ -33,25 +36,19 @@ export default async function Layout({ children }: { children: React.ReactNode }
 
 
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <RepoProvider>
-      <SidebarProvider
-      style={
-        {
-          "--sidebar-width": "calc(var(--spacing) * 72)",
-          "--header-height": "calc(var(--spacing) * 12)",
-        } as React.CSSProperties
-      }
-    >
-      <AppSidebar variant="inset" />
-      <SidebarInset>
-        <SiteHeader />
-        {children}
-      </SidebarInset>
-      <MessageThreadSidebar />
-    </SidebarProvider>
-
-   
-      </RepoProvider>
+      <DashboardCustomizationProvider>
+        <DashboardThemeSync />
+        <RepoProvider>
+          <DashboardSidebarWrapper>
+            <AppSidebar variant="inset" />
+            <SidebarInset>
+              <SiteHeader />
+              {children}
+            </SidebarInset>
+            <MessageThreadSidebar />
+          </DashboardSidebarWrapper>
+        </RepoProvider>
+      </DashboardCustomizationProvider>
     </ThemeProvider>
     </TamboProviderWithUser>
   )
