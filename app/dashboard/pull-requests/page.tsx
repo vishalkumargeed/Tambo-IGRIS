@@ -20,6 +20,13 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Table,
   TableBody,
   TableCell,
@@ -30,6 +37,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useRepo } from "@/contexts/repo-context"
 import { Spinner } from "@/components/ui/spinner"
+import {
+  type ReadyForReviewValue,
+  getReadyForReviewOverride,
+} from "@/lib/pr-ready-for-review"
+
+export { setReadyForReview } from "@/lib/pr-ready-for-review"
+export type { ReadyForReviewValue } from "@/lib/pr-ready-for-review"
 
 type PRItem = {
   number: number
@@ -41,6 +55,63 @@ type PRItem = {
   updated_at?: string
   closed_at?: string | null
   merged_at?: string | null
+  labels?: Array<{ name?: string }>
+}
+
+function getReadyForReview(
+  pr: PRItem,
+  owner: string,
+  repoName: string
+): ReadyForReviewValue {
+  const override = getReadyForReviewOverride(owner, repoName, pr.number)
+  if (override) return override
+  if (pr.merged_at) return "Done"
+  if (pr.state === "closed") return "Not Ready"
+  const labelNames = (pr.labels ?? []).map((l) => (l.name ?? "").toLowerCase())
+  if (
+    labelNames.some(
+      (n) => n === "in-progress" || n === "in process" || n.includes("in progress")
+    )
+  ) {
+    return "In Process"
+  }
+  if (
+    labelNames.some(
+      (n) => n === "ready" || n === "ready-for-review" || n.includes("ready")
+    )
+  ) {
+    return "Ready"
+  }
+  return "Not Ready"
+}
+
+function ReadyForReviewBadge({ value }: { value: ReadyForReviewValue }) {
+  switch (value) {
+    case "Ready":
+      return (
+        <Badge className="text-green-600 bg-[#3fb950]/15 hover:bg-[#3fb950]/25 border-0">
+          Ready
+        </Badge>
+      )
+    case "In Process":
+      return (
+        <Badge className="text-yellow-600 bg-[#d4a72c]/15 hover:bg-[#d4a72c]/25 border-0">
+          In Process
+        </Badge>
+      )
+    case "Done":
+      return (
+        <Badge className="text-purple-600 bg-[#8250df]/15 hover:bg-[#8250df]/25 border-0">
+          Done
+        </Badge>
+      )
+    case "Not Ready":
+      return (
+        <Badge className="text-red-600 bg-[#f85149]/15 hover:bg-[#f85149]/25 border-0">
+          Not Ready
+        </Badge>
+      )
+  }
 }
 
 function formatRelative(iso: string): string {
@@ -78,7 +149,7 @@ function PRsTable({
       <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
         <p className="text-muted-foreground text-sm">{emptyLabel}</p>
         <p className="text-muted-foreground/80 text-xs">
-          Try changing the tab or repository.
+          Try changing the tab, filters, or repository.
         </p>
       </div>
     )
@@ -90,6 +161,7 @@ function PRsTable({
           <TableHead className="w-16">#</TableHead>
           <TableHead>Title</TableHead>
           <TableHead className="w-24">State</TableHead>
+          <TableHead className="w-32">Review</TableHead>
           <TableHead className="w-40">Author</TableHead>
           <TableHead className="w-32 text-right">Updated</TableHead>
         </TableRow>
@@ -127,6 +199,9 @@ function PRsTable({
               )}
             </TableCell>
             <TableCell>
+              <ReadyForReviewBadge value={getReadyForReview(pr, owner, repoName)} />
+            </TableCell>
+            <TableCell>
               {pr.user ? (
                 <a
                   href={pr.user.html_url}
@@ -160,6 +235,67 @@ function PRsTable({
   )
 }
 
+function filterPRs(
+  prs: PRItem[],
+  owner: string,
+  repoName: string,
+  readyFilter: ReadyForReviewValue | "all",
+  authorFilter: string
+): PRItem[] {
+  return prs.filter((pr) => {
+    if (readyFilter !== "all") {
+      if (getReadyForReview(pr, owner, repoName) !== readyFilter) return false
+    }
+    if (authorFilter && pr.user?.login !== authorFilter) return false
+    return true
+  })
+}
+
+function AuthorFilterSelect({
+  openPRs,
+  mergedPRs,
+  closedOnlyPRs,
+  value,
+  onValueChange,
+  tabValue,
+}: {
+  openPRs: PRItem[]
+  mergedPRs: PRItem[]
+  closedOnlyPRs: PRItem[]
+  value: string
+  onValueChange: (v: string) => void
+  tabValue: string
+}) {
+  const prs =
+    tabValue === "open"
+      ? openPRs
+      : tabValue === "merged"
+        ? mergedPRs
+        : closedOnlyPRs
+  const authors = React.useMemo(() => {
+    const logins = new Set<string>()
+    prs.forEach((pr) => {
+      if (pr.user?.login) logins.add(pr.user.login)
+    })
+    return Array.from(logins).sort()
+  }, [prs])
+  return (
+    <Select value={value || "all"} onValueChange={(v) => onValueChange(v === "all" ? "" : v)}>
+      <SelectTrigger className="w-[160px]">
+        <SelectValue placeholder="All authors" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">All authors</SelectItem>
+        {authors.map((login) => (
+          <SelectItem key={login} value={login}>
+            {login}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
+
 export default function DashboardPullRequestsPage() {
   const { repo } = useRepo()
   const { data: session } = useSession()
@@ -171,6 +307,17 @@ export default function DashboardPullRequestsPage() {
   const [loadingOpen, setLoadingOpen] = React.useState(true)
   const [loadingClosed, setLoadingClosed] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
+  const [readyForReviewFilter, setReadyForReviewFilter] = React.useState<
+    ReadyForReviewValue | "all"
+  >("all")
+  const [authorFilter, setAuthorFilter] = React.useState<string>("")
+  const [tabValue, setTabValue] = React.useState<string>("open")
+  const [, setRefreshKey] = React.useState(0)
+  React.useEffect(() => {
+    const handler = () => setRefreshKey((k) => k + 1)
+    window.addEventListener("pr-ready-for-review-updated", handler)
+    return () => window.removeEventListener("pr-ready-for-review-updated", handler)
+  }, [])
 
   React.useEffect(() => {
     if (!repo || !token) {
@@ -259,7 +406,40 @@ export default function DashboardPullRequestsPage() {
           {error && (
             <p className="text-destructive mb-4 text-sm">{error}</p>
           )}
-          <Tabs defaultValue="open">
+          <div className="mb-4 flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-sm">Ready for Review</span>
+              <Select
+                value={readyForReviewFilter}
+                onValueChange={(v) =>
+                  setReadyForReviewFilter(v as ReadyForReviewValue | "all")
+                }
+              >
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="Ready">Ready</SelectItem>
+                  <SelectItem value="In Process">In Process</SelectItem>
+                  <SelectItem value="Done">Done</SelectItem>
+                  <SelectItem value="Not Ready">Not Ready</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-sm">Author</span>
+              <AuthorFilterSelect
+                openPRs={openPRs}
+                mergedPRs={mergedPRs}
+                closedOnlyPRs={closedOnlyPRs}
+                value={authorFilter}
+                onValueChange={setAuthorFilter}
+                tabValue={tabValue}
+              />
+            </div>
+          </div>
+          <Tabs value={tabValue} onValueChange={setTabValue}>
             <TabsList>
               <TabsTrigger value="open">
                 Open {loadingOpen ? <Spinner className="ml-1 inline size-3" /> : `(${openPRs.length})`}
@@ -279,7 +459,12 @@ export default function DashboardPullRequestsPage() {
                 </div>
               ) : (
                 <div className="rounded-lg border border-border">
-                  <PRsTable prs={openPRs} emptyLabel="No open pull requests." owner={repo.owner} repoName={repo.name} />
+                  <PRsTable
+                    prs={filterPRs(openPRs, repo.owner, repo.name, readyForReviewFilter, authorFilter)}
+                    emptyLabel="No open pull requests."
+                    owner={repo.owner}
+                    repoName={repo.name}
+                  />
                 </div>
               )}
             </TabsContent>
@@ -292,7 +477,7 @@ export default function DashboardPullRequestsPage() {
               ) : (
                 <div className="rounded-lg border border-border bg-[#8250df]/5">
                   <PRsTable
-                    prs={mergedPRs}
+                    prs={filterPRs(mergedPRs, repo.owner, repo.name, readyForReviewFilter, authorFilter)}
                     emptyLabel="No merged pull requests."
                     owner={repo.owner}
                     repoName={repo.name}
@@ -309,7 +494,7 @@ export default function DashboardPullRequestsPage() {
               ) : (
                 <div className="rounded-lg border border-border bg-muted/30">
                   <PRsTable
-                    prs={closedOnlyPRs}
+                    prs={filterPRs(closedOnlyPRs, repo.owner, repo.name, readyForReviewFilter, authorFilter)}
                     emptyLabel="No closed pull requests."
                     owner={repo.owner}
                     repoName={repo.name}
