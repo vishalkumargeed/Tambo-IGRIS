@@ -289,8 +289,8 @@ export default function IssueDetailPage() {
             </CardHeader>
             <CardContent>
               {issue.body ? (
-                <div className="rounded-md border border-border bg-muted/20">
-                  <GitHubMarkdown content={issue.body} />
+                <div className="text-inherit [&_p]:mb-1 [&_p:last-child]:mb-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_a]:text-primary [&_a]:underline [&_pre]:bg-transparent [&_pre]:border-0 [&_code]:bg-muted/50 [&_code]:px-1 [&_code]:rounded">
+                  <GitHubMarkdown content={issue.body} compact simple />
                 </div>
               ) : (
                 <p className="text-muted-foreground text-sm">No description provided.</p>
@@ -334,14 +334,12 @@ export default function IssueDetailPage() {
                             )}
                           </div>
                           <div
-                            className={`mt-1 rounded-2xl px-4 py-2 text-sm wrap-break-word [&_.markdown-body]:text-sm [&_.markdown-body]:p-0 [&_.markdown-body]:bg-transparent ${
-                              isMe
-                                ? "bg-muted border border-border rounded-tr-sm"
-                                : "bg-muted border border-border rounded-tl-sm"
+                            className={`mt-1 rounded-2xl px-3 py-2 text-sm wrap-break-word prose prose-sm max-w-none dark:prose-invert [&_pre]:bg-transparent [&_pre]:border-0 [&_pre]:p-0 [&_code]:bg-muted/50 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_blockquote]:border-l-2 [&_blockquote]:border-muted-foreground/30 [&_blockquote]:pl-3 [&_blockquote]:italic [&_.markdown-body]:p-0 [&_.markdown-body]:bg-transparent ${
+                              isMe ? "bg-muted/60 rounded-tr-sm" : "bg-muted/60 rounded-tl-sm"
                             }`}
                           >
                             {c.body?.trim() ? (
-                              <GitHubMarkdown content={c.body} compact />
+                              <GitHubMarkdown content={c.body} compact simple />
                             ) : (
                               "—"
                             )}
