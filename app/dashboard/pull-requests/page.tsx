@@ -65,9 +65,13 @@ function formatRelative(iso: string): string {
 function PRsTable({
   prs,
   emptyLabel = "No pull requests in this state.",
+  owner,
+  repoName,
 }: {
   prs: PRItem[]
   emptyLabel?: string
+  owner: string
+  repoName: string
 }) {
   if (prs.length === 0) {
     return (
@@ -98,9 +102,7 @@ function PRsTable({
             </TableCell>
             <TableCell>
               <Link
-                href={pr.html_url ?? "#"}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={`/dashboard/pull-requests/${pr.number}?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repoName)}`}
                 className="font-medium hover:underline"
               >
                 {pr.title}
@@ -277,7 +279,7 @@ export default function DashboardPullRequestsPage() {
                 </div>
               ) : (
                 <div className="rounded-lg border border-border">
-                  <PRsTable prs={openPRs} emptyLabel="No open pull requests." />
+                  <PRsTable prs={openPRs} emptyLabel="No open pull requests." owner={repo.owner} repoName={repo.name} />
                 </div>
               )}
             </TabsContent>
@@ -292,6 +294,8 @@ export default function DashboardPullRequestsPage() {
                   <PRsTable
                     prs={mergedPRs}
                     emptyLabel="No merged pull requests."
+                    owner={repo.owner}
+                    repoName={repo.name}
                   />
                 </div>
               )}
@@ -307,6 +311,8 @@ export default function DashboardPullRequestsPage() {
                   <PRsTable
                     prs={closedOnlyPRs}
                     emptyLabel="No closed pull requests."
+                    owner={repo.owner}
+                    repoName={repo.name}
                   />
                 </div>
               )}

@@ -1,0 +1,22 @@
+
+"Update the UI to include GitHub-style Octicons. Please use the following mapping for labels and tabs:
+
+Title: PencilIcon (size 16, text-gray-500)
+
+Description: NoteIcon (size 16, text-gray-500)
+
+Conversations: CommentDiscussionIcon (size 16, text-gray-500)
+
+Commits: GitCommitIcon (size 16, text-gray-500)
+
+Files Changed: FileDiffIcon (size 16, text-gray-500)
+
+Additionally, implement dynamic logic for the Checks icon based on the status:
+
+Success: Use CheckCircleIcon (Color: text-green-600)
+
+Pending/In Progress: Use DotFillIcon (Color: text-yellow-500)
+
+Failure: Use XCircleIcon (Color: text-red-600)
+ 
+Please ensure all icons are imported correctly at the top of the file and aligned with their labels using flex items-center gap-2.

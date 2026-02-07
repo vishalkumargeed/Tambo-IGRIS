@@ -62,9 +62,13 @@ function formatRelative(iso: string): string {
 function IssuesTable({
   issues,
   emptyLabel = "No issues in this state.",
+  owner,
+  repoName,
 }: {
   issues: IssueItem[]
   emptyLabel?: string
+  owner: string
+  repoName: string
 }) {
   if (issues.length === 0) {
     return (
@@ -95,9 +99,7 @@ function IssuesTable({
             </TableCell>
             <TableCell>
               <Link
-                href={issue.html_url ?? "#"}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={`/dashboard/issues/${issue.number}?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repoName)}`}
                 className="font-medium hover:underline"
               >
                 {issue.title}
@@ -261,6 +263,8 @@ export default function DashboardIssuesPage() {
                   <IssuesTable
                     issues={openIssues}
                     emptyLabel="No open issues."
+                    owner={repo.owner}
+                    repoName={repo.name}
                   />
                 </div>
               )}
@@ -274,9 +278,11 @@ export default function DashboardIssuesPage() {
               ) : (
                 <div className="rounded-lg border border-border bg-muted/30">
                   <IssuesTable
-                  issues={closedIssues}
-                  emptyLabel="No closed issues."
-                />
+                    issues={closedIssues}
+                    emptyLabel="No closed issues."
+                    owner={repo.owner}
+                    repoName={repo.name}
+                  />
                 </div>
               )}
             </TabsContent>

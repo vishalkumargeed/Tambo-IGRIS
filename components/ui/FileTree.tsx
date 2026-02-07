@@ -20,6 +20,8 @@ type FileTreeProps = {
   selectedPath?: string | null
   /** Optional: show +x / -y for files that have stats */
   fileStats?: Record<string, { additions: number; deletions: number }>
+  /** When true, render only the tree without outer Card (for embedding in other layouts) */
+  embedded?: boolean
 }
 
 export function FileTree({
@@ -27,6 +29,7 @@ export function FileTree({
   onSelectFile,
   selectedPath,
   fileStats,
+  embedded = false,
 }: FileTreeProps) {
   const renderItem = (fileItem: FileTreeItem) => {
     if ("items" in fileItem) {
@@ -73,6 +76,16 @@ export function FileTree({
     )
   }
 
+  const treeContent = (
+    <div className="flex max-h-[min(60vh,24rem)] flex-col gap-1 overflow-y-auto">
+      {items.map((item) => renderItem(item))}
+    </div>
+  )
+
+  if (embedded) {
+    return treeContent
+  }
+
   return (
     <Card className="mx-auto w-full max-w-[16rem] gap-2">
       <CardHeader>
@@ -83,9 +96,7 @@ export function FileTree({
         </Tabs>
       </CardHeader>
       <CardContent>
-        <div className="flex max-h-[min(60vh,24rem)] flex-col gap-1 overflow-y-auto">
-          {items.map((item) => renderItem(item))}
-        </div>
+        {treeContent}
       </CardContent>
     </Card>
   )
