@@ -109,6 +109,23 @@ const EXAMPLES: {
     featured: true,
   },
   {
+    id: "stats-radial-chart",
+    category: "dashboard",
+    categoryLabel: "Dashboard",
+    title: "Show stats as radial chart",
+    description: "Replace the 4 cards with a pie/radial chart. All 4 labels (Merged PRs, Open PRs, Open Issues, Closed Issues) are clickable and navigate to the relevant route.",
+    prompt: "Show the repo stats as a radial chart instead of cards.",
+    featured: true,
+  },
+  {
+    id: "stats-back-to-cards",
+    category: "dashboard",
+    categoryLabel: "Dashboard",
+    title: "Show stats as cards",
+    description: "Switch back from radial chart to the default 4-card layout for PR and issue counts.",
+    prompt: "Show the stats as cards again.",
+  },
+  {
     id: "what-can-you-do",
     category: "general",
     categoryLabel: "General",

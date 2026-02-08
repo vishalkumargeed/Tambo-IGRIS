@@ -9,6 +9,8 @@ export type DashboardCustomization = {
   theme?: "light" | "dark" | "system"
   /** Card layout on main dashboard */
   cardLayout?: "grid" | "compact" | "minimal"
+  /** Stats display: cards (4 cards) or radial (pie/radial chart with clickable segments) */
+  statsDisplayVariant?: "cards" | "radial"
   /** Show/hide dashboard sections */
   showSectionCards?: boolean
   showChart?: boolean
@@ -24,6 +26,7 @@ export type DashboardCustomization = {
 const defaults: Required<DashboardCustomization> = {
   theme: "system",
   cardLayout: "grid",
+  statsDisplayVariant: "cards",
   showSectionCards: true,
   showChart: true,
   showDataTable: true,
@@ -43,6 +46,8 @@ function loadFromStorage(): DashboardCustomization {
       out.theme = parsed.theme
     if (parsed.cardLayout === "grid" || parsed.cardLayout === "compact" || parsed.cardLayout === "minimal")
       out.cardLayout = parsed.cardLayout
+    if (parsed.statsDisplayVariant === "cards" || parsed.statsDisplayVariant === "radial")
+      out.statsDisplayVariant = parsed.statsDisplayVariant
     if (typeof parsed.showSectionCards === "boolean") out.showSectionCards = parsed.showSectionCards
     if (typeof parsed.showChart === "boolean") out.showChart = parsed.showChart
     if (typeof parsed.showDataTable === "boolean") out.showDataTable = parsed.showDataTable

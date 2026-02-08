@@ -37,17 +37,18 @@ export const components: TamboComponent[] = [
   {
     name: "DashboardCustomizer",
     description:
-      "Customize the dashboard look. Use when the user asks to change dashboard appearance: theme (light/dark), show/hide sections (cards, chart, table), card layout (grid/compact/minimal), sidebar width (narrow/default/wide), accent color, or card style (default/bordered/flat). Pass reset: true to restore defaults.",
+      "Customize the dashboard look. Use when the user asks to change dashboard appearance: theme (light/dark), show/hide sections (cards, chart, table), stats display (cards vs radial/pie chart), card layout (grid/compact/minimal), sidebar width (narrow/default/wide), accent color, or card style (default/bordered/flat). For stats display: pass statsDisplayVariant: 'radial' when user wants a radial/pie chart instead of 4 cards (e.g. 'show stats as pie chart', 'use radial graph', 'I want a radial chart for the counts'); pass statsDisplayVariant: 'cards' to restore the 4-card layout. Pass reset: true to restore defaults.",
     component: DashboardCustomizer,
     propsSchema: z.object({
-      theme: z.enum(["light", "dark", "system"]).optional(),
-      cardLayout: z.enum(["grid", "compact", "minimal"]).optional(),
+      theme: z.enum(["light", "dark", "system"]).optional().catch(undefined),
+      cardLayout: z.enum(["grid", "compact", "minimal"]).optional().catch(undefined),
+      statsDisplayVariant: z.enum(["cards", "radial"]).optional().catch(undefined),
       showSectionCards: z.boolean().optional(),
       showChart: z.boolean().optional(),
       showDataTable: z.boolean().optional(),
-      sidebarWidth: z.enum(["narrow", "default", "wide"]).optional(),
+      sidebarWidth: z.enum(["narrow", "default", "wide"]).optional().catch(undefined),
       accentColor: z.string().optional(),
-      cardStyle: z.enum(["default", "bordered", "flat"]).optional(),
+      cardStyle: z.enum(["default", "bordered", "flat"]).optional().catch(undefined),
       reset: z.boolean().optional(),
     }),
   },

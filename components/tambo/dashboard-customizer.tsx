@@ -8,6 +8,8 @@ export interface DashboardCustomizerProps {
   theme?: "light" | "dark" | "system"
   /** Card layout: grid (4 cards), compact (2x2 tighter), minimal (simple list) */
   cardLayout?: "grid" | "compact" | "minimal"
+  /** Stats display: cards (4 cards) or radial (pie chart with clickable segments) */
+  statsDisplayVariant?: "cards" | "radial"
   /** Show the section cards (PR/Issue counts) */
   showSectionCards?: boolean
   /** Show the chart area */
@@ -32,6 +34,7 @@ export interface DashboardCustomizerProps {
 export function DashboardCustomizer({
   theme,
   cardLayout,
+  statsDisplayVariant,
   showSectionCards,
   showChart,
   showDataTable,
@@ -50,6 +53,7 @@ export function DashboardCustomizer({
     const updates: Parameters<typeof updateCustomization>[0] = {}
     if (theme !== undefined) updates.theme = theme
     if (cardLayout !== undefined) updates.cardLayout = cardLayout
+    if (statsDisplayVariant !== undefined) updates.statsDisplayVariant = statsDisplayVariant
     if (showSectionCards !== undefined) updates.showSectionCards = showSectionCards
     if (showChart !== undefined) updates.showChart = showChart
     if (showDataTable !== undefined) updates.showDataTable = showDataTable
@@ -62,6 +66,7 @@ export function DashboardCustomizer({
   }, [
     theme,
     cardLayout,
+    statsDisplayVariant,
     showSectionCards,
     showChart,
     showDataTable,

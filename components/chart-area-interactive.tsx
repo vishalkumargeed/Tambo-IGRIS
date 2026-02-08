@@ -91,7 +91,7 @@ export function ChartAreaInteractive() {
             value={timeRange}
             onValueChange={(v) => v && setTimeRange(v)}
             variant="outline"
-            className="hidden *:data-[slot=toggle-group-item]:!px-4 @[767px]/card:flex"
+            className="hidden *:data-[slot=toggle-group-item]:!px-4 @[767px]/card:flex [&_[data-slot=toggle-group-item]]:hover:!bg-green-500/15 [&_[data-slot=toggle-group-item]]:hover:!border-green-500/50 [&_[data-slot=toggle-group-item][data-state=on]]:!bg-green-600 [&_[data-slot=toggle-group-item][data-state=on]]:!text-white [&_[data-slot=toggle-group-item][data-state=on]]:border-green-600 [&_[data-slot=toggle-group-item][data-state=on]]:hover:!bg-green-600 [&_[data-slot=toggle-group-item][data-state=on]]:hover:!text-white dark:[&_[data-slot=toggle-group-item][data-state=on]]:!bg-green-600 dark:[&_[data-slot=toggle-group-item][data-state=on]]:!text-white dark:[&_[data-slot=toggle-group-item]]:hover:!bg-green-500/20 dark:[&_[data-slot=toggle-group-item][data-state=on]]:hover:!bg-green-600"
           >
             <ToggleGroupItem value="7d">7 days</ToggleGroupItem>
             <ToggleGroupItem value="3m">3 months</ToggleGroupItem>

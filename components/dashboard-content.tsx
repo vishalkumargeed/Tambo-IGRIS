@@ -3,6 +3,7 @@
 import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 import { DataTable } from "@/components/data-table"
 import { SectionCards } from "@/components/section-cards"
+import { StatsRadialChart } from "@/components/stats-radial-chart"
 import { useRepo } from "@/contexts/repo-context"
 import { useDashboardCustomization } from "@/contexts/dashboard-customization-context"
 
@@ -27,11 +28,31 @@ export function DashboardContent() {
     >
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          {merged.showSectionCards && <SectionCards />}
-          {merged.showChart && (
-            <div className="px-4 lg:px-6">
-              <ChartAreaInteractive />
+          {merged.showSectionCards && merged.statsDisplayVariant === "radial" && merged.showChart ? (
+            <div className="flex flex-col gap-4 px-4 md:gap-6 lg:flex-row lg:justify-between lg:px-6">
+              <div className="min-w-0 w-full lg:max-w-[360px]">
+                <StatsRadialChart />
+              </div>
+              <div className="min-w-0 w-full lg:max-w-[360px]">
+                <ChartAreaInteractive />
+              </div>
             </div>
+          ) : (
+            <>
+              {merged.showSectionCards &&
+                (merged.statsDisplayVariant === "radial" ? (
+                  <div className="px-4 lg:px-6">
+                    <StatsRadialChart />
+                  </div>
+                ) : (
+                  <SectionCards />
+                ))}
+              {merged.showChart && (
+                <div className="px-4 lg:px-6">
+                  <ChartAreaInteractive />
+                </div>
+              )}
+            </>
           )}
           {merged.showDataTable && <DataTable />}
         </div>
