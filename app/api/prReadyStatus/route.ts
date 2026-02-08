@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    let checksPassed = true;
+    let checksPassed = false;
     if (headSha) {
       const checksRes = await fetch(
         `https://api.github.com/repos/${owner}/${repoName}/commits/${headSha}/check-runs`,
