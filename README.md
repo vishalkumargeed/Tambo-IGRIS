@@ -6,6 +6,8 @@
 
 > **What this is:** A Next.js application that acts as a smart GitHub dashboard plus an AI co-pilot for your repositories.
 
+📹 **Video Walkthrough**: [Watch the demo video](https://youtu.be/MBC-_wCe5_Q) to see Sentinel AI in action!
+
 ---
 
 ## Features
@@ -232,12 +234,85 @@ Make sure your **GitHub OAuth callback URL** matches the production domain (e.g.
 
 ## Important Links
 
+- **Video Walkthrough**: [Watch the demo video](https://youtu.be/MBC-_wCe5_Q)
 - **GitHub Repository**: [https://github.com/ihimanshu07/Tambo-IGRIS](https://github.com/ihimanshu07/Tambo-IGRIS)
 - **Tambo AI**: [https://tambo.ai/](https://tambo.ai/)
 - **Next.js Documentation**: [https://nextjs.org/docs](https://nextjs.org/docs)
 - **NextAuth.js Documentation**: [https://next-auth.js.org/](https://next-auth.js.org/)
 - **shadcn/ui**: [https://ui.shadcn.com/](https://ui.shadcn.com/)
 - **GitHub API Documentation**: [https://docs.github.com/en/rest](https://docs.github.com/en/rest)
+
+---
+
+## MCP Server Configuration
+
+### GitHub MCP Server
+
+This project supports **Model Context Protocol (MCP)** servers to extend the AI assistant's capabilities. The GitHub MCP server provides powerful tools for interacting with GitHub repositories, issues, pull requests, and more.
+
+#### Setting Up GitHub MCP Server
+
+1. **Access MCP Configuration**:
+   - Open the application and navigate to the dashboard
+   - Use the MCP configuration modal (accessible via settings or keyboard shortcut)
+
+2. **Add GitHub MCP Server**:
+   - **Server URL**: Configure your GitHub MCP server endpoint
+   - **Server Name**: `GitHub MCP Server` (optional but recommended)
+   - **Transport Type**: `HTTP` (default) or `SSE`
+
+3. **GitHub MCP Server Capabilities**:
+   The GitHub MCP server provides extensive tools for:
+   - **Repository Management**: Create, fork, search repositories
+   - **Issues**: List, create, update, search issues
+   - **Pull Requests**: Create, review, merge, search PRs
+   - **Code Operations**: Read files, create/update/delete files, search code
+   - **Contributors**: Get contributor information and statistics
+   - **Branches & Commits**: Manage branches, view commit history
+   - **Releases & Tags**: Manage releases and tags
+   - **Teams & Organizations**: Access team and org information
+
+#### Available GitHub MCP Tools
+
+The GitHub MCP server exposes 50+ tools including:
+
+- `list_issues`, `search_issues`, `issue_read`, `issue_write` - Issue management
+- `list_pull_requests`, `search_pull_requests`, `pull_request_read`, `create_pull_request` - PR operations
+- `get_file_contents`, `create_or_update_file`, `delete_file`, `search_code` - Code operations
+- `list_commits`, `get_commit` - Commit history
+- `create_repository`, `fork_repository`, `search_repositories` - Repository management
+- `get_me`, `search_users` - User information
+- `merge_pull_request`, `pull_request_review_write` - PR reviews and merges
+- And many more...
+
+#### Client-Side MCP Configuration
+
+MCP servers are configured **client-side** and stored in browser localStorage. This means:
+- Each user can configure their own MCP servers
+- Configuration persists across sessions
+- Servers are connected directly from the browser
+
+#### Example: Using GitHub MCP for Contributors
+
+The GitHub MCP server is particularly useful for contributor-related operations:
+
+```typescript
+// The AI assistant can use GitHub MCP tools to:
+// - Search for contributors: search_users
+// - Get repository contributors: list_commits (with author filter)
+// - Analyze contributor activity: get_commit, list_commits
+// - Get team members: get_team_members, get_teams
+```
+
+#### Troubleshooting
+
+- **Server Not Connecting**: Ensure the MCP server URL is accessible from your browser
+- **CORS Issues**: The MCP server must support CORS for browser connections
+- **Authentication**: Some GitHub MCP servers may require authentication tokens
+
+For more information, see:
+- [Tambo AI MCP Documentation](https://docs.tambo.co/concepts/model-context-protocol)
+- [Client-Side MCP Connection](https://docs.tambo.co/concepts/model-context-protocol/clientside-mcp-connection)
 
 ---
 
@@ -250,4 +325,25 @@ Contributions, bug reports, and feature requests are welcome.
 3. Make your changes and run `npm run lint`
 4. Commit and push: `git push origin feature/your-feature-name`
 5. Open a pull request with a clear description of your changes
+
+### For Contributors: GitHub MCP Server Setup
+
+When contributing to this project, you may want to configure the GitHub MCP server for enhanced AI capabilities:
+
+1. **Get GitHub MCP Server URL**: 
+   - Deploy or use an existing GitHub MCP server instance
+   - Ensure it's accessible via HTTP/HTTPS from your browser
+
+2. **Configure via UI**:
+   - Open the MCP configuration modal in the application
+   - Add the GitHub MCP server URL
+   - Test the connection
+
+3. **Verify Configuration**:
+   - Check that the server appears in the "Connected Servers" list
+   - Try asking the AI assistant to use GitHub MCP tools (e.g., "list contributors for this repo")
+
+For detailed GitHub MCP server tool documentation and setup instructions, see:
+- `githubMCP.txt` - Complete tool reference (in project root)
+- `docs/GITHUB_MCP_SETUP.md` - Detailed setup guide
 

@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import type { ReactNode } from "react";
 import { useEffect, useState, useMemo } from "react";
 import { components } from "@/lib/tambo";
+import { useMcpServers } from "@/components/tambo/mcp-config-modal";
 
 export interface TamboUserProfile {
   name?: string | null;
@@ -30,6 +31,7 @@ export function TamboProviderWithUser({
 }: TamboProviderWithUserProps) {
   const [fetchedOwner, setFetchedOwner] = useState<string | null>(null);
   const { data: session } = useSession();
+  const mcpServers = useMcpServers();
 
   useEffect(() => {
     // If owner is provided via props, or we lack auth, don't fetch
@@ -90,6 +92,7 @@ export function TamboProviderWithUser({
       userToken={userToken}
       contextHelpers={contextHelpers}
       components={components}
+      mcpServers={mcpServers}
     >
       {children}
     </TamboProvider>

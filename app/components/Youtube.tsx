@@ -4,7 +4,7 @@ import { Video } from "lucide-react"
 
 export default function Youtube() {
   const handleClick = () => {
-    window.location.href = "https://www.youtube.com/@vishalkumargeed-l/videos";
+    window.location.href = "https://youtu.be/MBC-_wCe5_Q";
   };
 
   return (
