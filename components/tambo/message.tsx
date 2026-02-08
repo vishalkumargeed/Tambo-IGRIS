@@ -31,6 +31,48 @@ import {
 } from "./markdown-components";
 
 /**
+ * If the message text contains raw pr-list JSON (e.g. MCP returns "pr" + JSON without a code block),
+ * wrap it in a pr-list fenced block so the markdown renderer shows the interactive table.
+ */
+function ensurePRListFenced(markdown: string): string {
+  const start = markdown.indexOf('{"owner"');
+  if (start === -1) return markdown;
+  let depth = 0;
+  let end = start;
+  for (; end < markdown.length; end++) {
+    const c = markdown[end];
+    if (c === "{") depth++;
+    else if (c === "}") {
+      depth--;
+      if (depth === 0) break;
+    }
+  }
+  const json = markdown.slice(start, end + 1);
+  try {
+    const o = JSON.parse(json) as unknown;
+    if (
+      o &&
+      typeof o === "object" &&
+      "owner" in o &&
+      "repo" in o &&
+      "prs" in o &&
+      Array.isArray((o as { prs: unknown }).prs)
+    ) {
+      return (
+        markdown.slice(0, start) +
+        "\n\n```pr-list\n" +
+        json +
+        "\n```\n\n" +
+        markdown.slice(end + 1)
+      );
+    }
+  } catch {
+    // ignore
+  }
+  return markdown;
+}
+
+/**
  * CSS variants for the message container
  * @typedef {Object} MessageVariants
  * @property {string} default - Default styling
@@ -147,8 +189,9 @@ function MessageContentRenderer({
     return contentToRender;
   }
   if (markdown) {
+    const processed = ensurePRListFenced(markdownContent);
     return (
-      <Streamdown components={markdownComponents}>{markdownContent}</Streamdown>
+      <Streamdown components={markdownComponents}>{processed}</Streamdown>
     );
   }
   return markdownContent;

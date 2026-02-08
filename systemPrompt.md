@@ -49,5 +49,22 @@ After reviewing each PR, update the corresponding review state with:
 - Prefer precise terminology: e.g., "Context Alignment" in place of "missing info", "Technical Blockers" instead of "problems".
 - Place template adherence issues (for "Template" PRs) at the start of the comment.
 
-# UI Section (Bypass Notice):
-No Tambo Elicitation UI or user review selection is required; immediately act to review all open PRs with the above protocol.
+# When the user asks to LIST or SHOW PRs (e.g. "template PR", "list PRs with Template in title", "show me template PRs"):
+- Do **not** start reviewing immediately. Do **not** reply with only plain text or raw JSON—the user must see an interactive table in the chat.
+- Use the GitHub MCP to fetch the matching open PRs (e.g. `list_pull_requests` with state "open", or `search_pull_requests`; filter so the list matches the user’s request, e.g. PRs whose title contains "Template").
+- You **must** render the **PRListTable** component with the result so the table appears in the message. In your response:
+  1. Optionally give a one-line summary in text (e.g. "Found 2 open Template PRs in owner/repo.").
+  2. **Render the PRListTable component** with props: `owner` (string), `repo` (string), `prs` (array of objects, each with `number` (integer), `title` (string), and `url` (string, the PR’s HTML URL) when available).
+- The table will show checkboxes (select/deselect) and a **Review selected PRs** button. When the user selects PRs and clicks it, you will receive a follow-up like: "Please review the following PRs one by one using the GitHub MCP (owner: X, repo: Y): #1, #2. Apply the full review protocol to each PR. Make sure to adhere the Multiple PRs Review Protocol and the Multi-step Review Protocol" 
+- When you receive that follow-up, review **only** those listed PRs one by one using the GitHub MCP, applying the full Review Protocol, Decision Logic, and Review State Sync above. Pace and retry rules still apply.
+
+# When the user asks to REVIEW ALL open PRs (no list/selection):
+- No user selection is required. Immediately act to review all open PRs with the protocol above (UI bypass).
+
+# Multi-step (reviewing multiple PRs in one turn):
+- When reviewing **multiple** PRs (e.g. after "Review selected PRs" or "review all open PRs"), you **must** continue until **all** listed or open PRs are reviewed. Do **not** stop after the first PR unless you hit an error or rate limit.
+- **Critical:** Do **not** output text like "I'll move on to PR #7 next" or "I'll move on to the next PR" and then stop. If you have more PRs to review, **immediately** call the GitHub MCP tools (e.g. `pull_request_read`, `pull_request_review_write`) for the **next** PR in the **same** turn. The pacing instruction (2–5 seconds) is advisory for rate limits; you cannot literally sleep, so just proceed with the next MCP calls. Outputting a summary and then stopping counts as failing to complete the task.
+- If the platform ends the stream after one PR (Chain-of-Thought Termination), the user will click **Continue** and send "Please continue reviewing the remaining PRs...". When you receive that message, **immediately** call the GitHub MCP for the **next** PR in the list (do not re-summarize or re-review the previous PR).
+- Do not wait for user confirmation between PRs—proceed from one PR to the next using the GitHub MCP until the list is complete (subject to pacing and retry rules above).
+
+

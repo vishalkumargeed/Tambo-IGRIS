@@ -1,5 +1,6 @@
 "use client";
 
+import { PRListCodeBlock } from "@/components/tambo/pr-selection-table";
 import { cn } from "@/lib/utils";
 import DOMPurify from "dompurify";
 import hljs from "highlight.js";
@@ -133,6 +134,30 @@ export const createMarkdownComponents = (): Record<
   code: function Code({ className, children, ...props }) {
     const match = /language-(\w+)/.exec(className ?? "");
     const content = String(children).replace(/\n$/, "");
+
+    // Interactive PR selection table (owner, repo, prs) for "template PR" / filtered PR lists.
+    // Handle both ```pr-list and ```pr (MCP sometimes returns "pr" as language) when content is valid.
+    if (match && (match[1] === "pr-list" || match[1] === "pr")) {
+      try {
+        const parsed = JSON.parse(content.trim()) as unknown;
+        if (
+          parsed &&
+          typeof parsed === "object" &&
+          "owner" in parsed &&
+          "repo" in parsed &&
+          "prs" in parsed &&
+          Array.isArray((parsed as { prs: unknown }).prs)
+        ) {
+          return <PRListCodeBlock content={content} />;
+        }
+      } catch {
+        // not valid JSON, fall through to normal code rendering
+      }
+      if (match[1] === "pr-list") {
+        return <PRListCodeBlock content={content} />;
+      }
+    }
+
     const deferredContent = React.useDeferredValue(content);
 
     const highlighted = React.useMemo(() => {

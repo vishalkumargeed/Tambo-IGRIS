@@ -1,8 +1,7 @@
 "use client";
 
 import type { messageVariants } from "@/components/tambo/message";
-import { useTamboThread ,  useTamboThreadInput } from "@tambo-ai/react";
-import { ElicitationUI } from "./elicitation-ui";
+import { ContinueReviewStrip } from "./continue-review-strip";
 import {
   MessageInput,
   MessageInputError,
@@ -288,6 +287,9 @@ export const MessageThreadCollapsible = React.forwardRef<
             <MessageSuggestions>
               <MessageSuggestionsStatus />
             </MessageSuggestions>
+
+            {/* When agent stops mid-review (e.g. after one PR), show Continue to trigger next step */}
+            <ContinueReviewStrip />
 
             {/* Message input - fixed at bottom, does not shift; id for Ctrl+K focus target */}
             <div id="message-thread-input" className="shrink-0 p-4">
