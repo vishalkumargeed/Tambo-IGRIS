@@ -8,6 +8,7 @@ import {
   GitPullRequestIcon,
   GitMergeIcon,
   GitPullRequestClosedIcon,
+  SyncIcon,
 } from "@primer/octicons-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -312,7 +313,8 @@ export default function DashboardPullRequestsPage() {
   >("all")
   const [authorFilter, setAuthorFilter] = React.useState<string>("")
   const [tabValue, setTabValue] = React.useState<string>("open")
-  const [, setRefreshKey] = React.useState(0)
+  const [refreshKey, setRefreshKey] = React.useState(0)
+  const [refreshing, setRefreshing] = React.useState(false)
   React.useEffect(() => {
     const handler = () => setRefreshKey((k) => k + 1)
     window.addEventListener("pr-ready-for-review-updated", handler)
@@ -368,7 +370,16 @@ export default function DashboardPullRequestsPage() {
         setClosedOnlyPRs([])
       })
       .finally(() => setLoadingClosed(false))
-  }, [repo, token])
+  }, [repo, token, refreshKey])
+
+  React.useEffect(() => {
+    if (!loadingOpen && !loadingClosed) setRefreshing(false)
+  }, [loadingOpen, loadingClosed])
+
+  const handleRefresh = () => {
+    setRefreshing(true)
+    setRefreshKey((k) => k + 1)
+  }
 
   if (!repo) {
     return (
@@ -397,10 +408,24 @@ export default function DashboardPullRequestsPage() {
     <div className="flex flex-1 flex-col gap-4 px-4 py-6 lg:px-6">
       <Card>
         <CardHeader>
-          <CardTitle>Pull Requests</CardTitle>
-          <CardDescription>
-            Open, merged, and closed pull requests for {repo.fullName}
-          </CardDescription>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <CardTitle>Pull Requests</CardTitle>
+              <CardDescription>
+                Open, merged, and closed pull requests for {repo.fullName}
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={refreshing || loadingOpen || loadingClosed}
+              aria-label="Refresh"
+            >
+              <SyncIcon size={16} className={refreshing ? "animate-spin" : ""} />
+              {refreshing ? "Refreshing…" : "Refresh"}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {error && (

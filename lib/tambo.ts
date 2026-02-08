@@ -7,8 +7,10 @@
 
 import type { TamboComponent } from "@tambo-ai/react";
 import { z } from "zod";
+import { ContinueReviewCard } from "@/components/tambo/continue-review-card";
 import { DashboardCustomizer } from "@/components/tambo/dashboard-customizer";
 import { PRListTable } from "@/components/tambo/pr-selection-table";
+import { PRReviewStateSync } from "@/components/tambo/pr-review-state-sync";
 
 const prListItemSchema = z.object({
   number: z.coerce.number().optional().default(0),
@@ -48,6 +50,25 @@ export const components: TamboComponent[] = [
       owner: z.string().optional().default(""),
       repo: z.string().optional().default(""),
       prs: z.array(prListItemSchema).optional().default([]),
+    }),
+  },
+  {
+    name: "ContinueReviewCard",
+    description:
+      "Render ONLY when you have just finished reviewing one PR and more PRs remain in the list, but the platform ended the stream (Chain-of-Thought Termination). This shows the user a Continue/Cancel card. Do NOT render for general conversation, greetings, single-PR reviews, or when the user did not ask for multi-PR review. Do NOT render after answering 'hi', 'what can you do', or any non-GitHub question.",
+    component: ContinueReviewCard,
+    propsSchema: z.object({}),
+  },
+  {
+    name: "PRReviewStateSync",
+    description:
+      "After reviewing each PR you MUST render this component so the dashboard Pull Requests table shows the correct Review status. Pass owner (GitHub owner), repo (repository name), prNumber (PR number), and value: 'Ready' if all criteria were met, otherwise 'In Process'. Use 'Done' for merged PRs, 'Not Ready' for closed without merge. Render once per PR immediately after completing that PR's review and Review State Sync.",
+    component: PRReviewStateSync,
+    propsSchema: z.object({
+      owner: z.string().optional().default(""),
+      repo: z.string().optional().default(""),
+      prNumber: z.coerce.number().optional().default(0),
+      value: z.string().optional().default("Not Ready"),
     }),
   },
 ];

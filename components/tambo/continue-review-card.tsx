@@ -14,34 +14,15 @@ import * as React from "react";
 const CONTINUE_MESSAGE =
   "Please continue reviewing the remaining PRs one by one using the GitHub MCP...";
 
-export interface ContinueReviewStripProps {
-  /** When true, strip is hidden (e.g. user stopped response via Ctrl+C or Cancel button). */
-  dismissedByCancel?: boolean;
-  /** Call when user cancels so parent can hide the strip (also set when parent stops via Ctrl+C). */
-  onDismissedByCancel?: (dismissed: boolean) => void;
-}
-
 /**
- * Shown when the agent has stopped mid-review (e.g. after one PR due to chain-of-thought termination).
- * Renders a Card with Continue and Cancel. Continue sends a message to resume the review flow;
- * Cancel just stops the response and dismisses the card (no message sent).
- * When response is stopped via Ctrl+C, parent passes dismissedByCancel so this strip does not show.
+ * Tambo component: rendered by the LLM only when it has stopped after one PR
+ * (chain-of-thought termination) and more PRs remain. Do not render for general
+ * chat or when not in a multi-PR review flow. Shows Continue / Cancel card.
  */
-export function ContinueReviewStrip({
-  dismissedByCancel: dismissedByCancelProp,
-  onDismissedByCancel,
-}: ContinueReviewStripProps = {}) {
-  const { isIdle, cancel } = useTamboThread();
+export function ContinueReviewCard() {
+  const { cancel } = useTamboThread();
   const { setValue, submit } = useTamboThreadInput();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [dismissedInternal, setDismissedInternal] = React.useState(false);
-
-  const dismissedByCancel = dismissedByCancelProp ?? dismissedInternal;
-
-  // When parent controls dismissed state, no local reset; otherwise reset when thread goes busy
-  React.useEffect(() => {
-    if (onDismissedByCancel == null && !isIdle) setDismissedInternal(false);
-  }, [isIdle, onDismissedByCancel]);
 
   const sendMessage = React.useCallback(
     (message: string) => {
@@ -70,19 +51,15 @@ export function ContinueReviewStrip({
   }, [sendMessage]);
 
   const handleCancel = React.useCallback(async () => {
-    onDismissedByCancel?.(true);
-    setDismissedInternal(true);
     await cancel();
-  }, [cancel, onDismissedByCancel]);
-
-  if (!isIdle || dismissedByCancel) return null;
+  }, [cancel]);
 
   return (
     <Card
       className={cn(
-        "mx-4 mb-2 shrink-0 rounded-lg border border-border bg-card py-4 shadow-sm",
+        "my-2 w-full max-w-md rounded-lg border border-border bg-card py-4 shadow-sm",
       )}
-      data-slot="continue-review-strip"
+      data-slot="continue-review-card"
     >
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-foreground">

@@ -1,7 +1,6 @@
 "use client";
 
 import type { messageVariants } from "@/components/tambo/message";
-import { ContinueReviewStrip } from "./continue-review-strip";
 import {
   MessageInput,
   MessageInputError,
@@ -25,7 +24,7 @@ import {
 import { ThreadDropdown } from "@/components/tambo/thread-dropdown";
 import { useRepoResourceProvider } from "@/lib/repo-resource-provider";
 import { cn } from "@/lib/utils";
-import { type Suggestion } from "@tambo-ai/react";
+import { type Suggestion, useTamboThread } from "@tambo-ai/react";
 import { type VariantProps } from "class-variance-authority";
 import { XIcon } from "lucide-react";
 import { Collapsible } from "radix-ui";
@@ -207,6 +206,19 @@ export const MessageThreadCollapsible = React.forwardRef<
   ) => {
     const { isOpen, setIsOpen, shortcutText } =
       useCollapsibleState(defaultOpen, embedded);
+    const { cancel, isIdle } = useTamboThread();
+
+    // Ctrl+C: stop the current response (only when a response is in progress; copy works when idle)
+    React.useEffect(() => {
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if ((event.ctrlKey || event.metaKey) && event.key === "c" && !isIdle) {
+          event.preventDefault();
+          cancel();
+        }
+      };
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [cancel, isIdle]);
 
     // Backward compatibility: prefer height, fall back to maxHeight
     const effectiveHeight = height ?? maxHeight;
@@ -287,9 +299,6 @@ export const MessageThreadCollapsible = React.forwardRef<
             <MessageSuggestions>
               <MessageSuggestionsStatus />
             </MessageSuggestions>
-
-            {/* When agent stops mid-review (e.g. after one PR), show Continue to trigger next step */}
-            <ContinueReviewStrip />
 
             {/* Message input - fixed at bottom, does not shift; id for Ctrl+K focus target */}
             <div id="message-thread-input" className="shrink-0 p-4">
