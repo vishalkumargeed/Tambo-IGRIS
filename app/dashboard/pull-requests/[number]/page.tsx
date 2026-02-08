@@ -135,6 +135,8 @@ export default function PRDetailPage() {
     (session?.user as { login?: string } | undefined)?.login ?? null
   )
   const [activeTab, setActiveTab] = React.useState<string>("description")
+  const [actionLoading, setActionLoading] = React.useState(false)
+  const [actionError, setActionError] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     try {
@@ -309,6 +311,38 @@ export default function PRDetailPage() {
     setRefreshKey((k) => k + 1)
   }
 
+  const performPRAction = async (action: "merge" | "close" | "reopen") => {
+    if (!repo || !token || !number || actionLoading) return
+    setActionError(null)
+    setActionLoading(true)
+    try {
+      const res = await fetch("/api/prActions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          owner: repo.owner,
+          repoName: repo.name,
+          prNumber: number,
+          action,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setActionError(data.message ?? data.error ?? `Failed to ${action} PR`)
+        return
+      }
+      setRefreshKey((k) => k + 1)
+      handleRefresh()
+    } catch {
+      setActionError(`Failed to ${action} PR`)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   const conversationsEndRef = React.useRef<HTMLDivElement>(null)
 
   const handleAddComment = async () => {
@@ -441,7 +475,41 @@ export default function PRDetailPage() {
             <p className="text-muted-foreground mt-1 text-xs">Updated {formatDate(pr.updated_at)}</p>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {pr.state === "open" && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={actionLoading}
+                onClick={() => performPRAction("merge")}
+              >
+                {actionLoading ? <Spinner className="mr-2 size-3.5" /> : <GitMergeIcon size={14} className="mr-2 text-green-600" />}
+                Merge
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={actionLoading}
+                onClick={() => performPRAction("close")}
+                className="hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+              >
+                <GitPullRequestClosedIcon size={14} className="mr-2 text-red-600" />
+                Close
+              </Button>
+            </>
+          )}
+          {pr.state === "closed" && !pr.merged_at && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={actionLoading}
+              onClick={() => performPRAction("reopen")}
+            >
+              {actionLoading ? <Spinner className="mr-2 size-3.5" /> : <GitPullRequestIcon size={14} className="mr-2 text-green-600" />}
+              Reopen
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -458,6 +526,9 @@ export default function PRDetailPage() {
                 View on GitHub
               </a>
             </Button>
+          )}
+          {actionError && (
+            <p className="text-destructive text-xs w-full">{actionError}</p>
           )}
         </div>
       </div>

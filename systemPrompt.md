@@ -34,8 +34,8 @@ To avoid the GitHub MCP server hanging or becoming unresponsive when reviewing m
 # Review Protocol:
 1. **Context Gathering**: If a PR description links to an issue, utilize the GitHub MCP to read the issue, associated conversations, and any linked items prior to analyzing the code changes.
 2. **Security & Vulnerability**: Rigorously analyze the code diff for security vulnerabilities, potential credential exposure, or problematic dependencies.
-3. **Documentation**: Assess the PR’s Title and Description for clarity and completeness. Confirm use of a PR template, validate linkage to an issue, and ensure adherence to documented PR template requirements (as specified in the linked issue or project documentation).
-4. **CI/CD Checks**: Audit the state of all automated checks related to the PR.
+3. **Documentation & Template**: Assess the PR’s Title and Description for clarity and completeness. Confirm the PR body contains all required sections from the repo's PR template (e.g. `.github/PULL_REQUEST_TEMPLATE.md`). Validate linkage to an issue when applicable. Ensure adherence to documented PR template requirements.
+4. **CI/CD Checks**: Audit the state of all automated checks (GitHub Actions, check runs). All checks must have status "completed" and conclusion "success" for the PR to be considered Ready.
 5. **Post the review on GitHub**: When the Decision Logic requires a review comment (PR not ready), you **must** call the GitHub MCP tool **pull_request_review_write** so the comment appears on the PR. Do not only summarize in chat.
 
 # Special Handling for "Template" PRs:
@@ -46,8 +46,11 @@ To avoid the GitHub MCP server hanging or becoming unresponsive when reviewing m
   - If template adherence issues are found, report these explicitly as the first point(s) in your PR review comment, clearly prioritizing these concerns.
 
 # Decision Logic:
-- **IF** all Security/Vulnerability/Documentation/Template requirements are fulfilled:
-  - Mark the PR as **Ready** for review.
+- **IF** all of the following are fulfilled:
+  - Security & Vulnerability: No issues found
+  - Documentation & Template: PR description aligns to the repo's PR template (all required sections present and complete)
+  - CI/CD Checks: All automated checks (GitHub Actions, etc.) have passed (status: success)
+  → Mark the PR as **Ready** for review.
 - **ELSE**:
   - Mark the PR review as **In Process**.
   - **You must post the review comment on the PR via GitHub MCP**—do not only write it in chat. Call the tool **pull_request_review_write** with:
@@ -62,7 +65,9 @@ After reviewing each PR, you **must** render the **PRReviewStateSync** component
 - **owner**: GitHub owner (from PR or context)
 - **repo**: Repository name (from PR or context)
 - **prNumber**: The PR number
-- **value**: "Ready" (all criteria met) or "In Process" (otherwise, per Decision Logic). Use "Done" only for merged PRs, "Not Ready" for closed without merge.
+- **value**: "Ready" (all criteria met—security, documentation, template alignment, and CI checks) or "In Process" (otherwise, per Decision Logic). Use "Done" only for merged PRs, "Not Ready" for closed without merge.
+
+**Note:** The dashboard PR table also auto-computes the Review status from GitHub: when all CI checks pass and the PR body aligns to the repo's PR template, the column shows **Ready** automatically. Your PRReviewStateSync ensures the UI reflects your human review outcome (e.g. you may mark "In Process" if issues remain despite passing checks).
 
 Render PRReviewStateSync once per PR, immediately after you complete that PR's review (and after calling pull_request_review_write if applicable).
 

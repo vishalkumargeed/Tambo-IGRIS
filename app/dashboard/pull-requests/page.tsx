@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Table,
   TableBody,
@@ -62,12 +63,15 @@ type PRItem = {
 function getReadyForReview(
   pr: PRItem,
   owner: string,
-  repoName: string
+  repoName: string,
+  apiReadyStatus?: boolean | null
 ): ReadyForReviewValue {
   const override = getReadyForReviewOverride(owner, repoName, pr.number)
   if (override) return override
   if (pr.merged_at) return "Done"
   if (pr.state === "closed") return "Not Ready"
+  // When all checks pass AND PR aligns to template, show Ready
+  if (apiReadyStatus === true) return "Ready"
   const labelNames = (pr.labels ?? []).map((l) => (l.name ?? "").toLowerCase())
   if (
     labelNames.some(
@@ -139,12 +143,41 @@ function PRsTable({
   emptyLabel = "No pull requests in this state.",
   owner,
   repoName,
+  prReadyStatusMap,
+  selectedNumbers,
+  onSelectionChange,
+  tabType,
 }: {
   prs: PRItem[]
   emptyLabel?: string
   owner: string
   repoName: string
+  prReadyStatusMap?: Record<number, { ready: boolean } | null>
+  selectedNumbers?: Set<number>
+  onSelectionChange?: (numbers: Set<number>) => void
+  tabType?: "open" | "merged" | "closed"
 }) {
+  const canSelect = !!onSelectionChange && !!selectedNumbers
+  const selectable = tabType === "open" || tabType === "closed"
+  const allSelected = canSelect && selectable && prs.length > 0 && prs.every((p) => selectedNumbers.has(p.number))
+  const someSelected = canSelect && selectable && prs.some((p) => selectedNumbers.has(p.number))
+
+  const handleToggleAll = () => {
+    if (!onSelectionChange || !selectedNumbers) return
+    const next = new Set(selectedNumbers)
+    if (allSelected) prs.forEach((p) => next.delete(p.number))
+    else prs.forEach((p) => next.add(p.number))
+    onSelectionChange(next)
+  }
+
+  const handleToggleOne = (num: number) => {
+    if (!onSelectionChange || !selectedNumbers) return
+    const next = new Set(selectedNumbers)
+    if (next.has(num)) next.delete(num)
+    else next.add(num)
+    onSelectionChange(next)
+  }
+
   if (prs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
@@ -159,6 +192,15 @@ function PRsTable({
     <Table>
       <TableHeader>
         <TableRow>
+          {canSelect && selectable && (
+            <TableHead className="w-10">
+              <Checkbox
+                checked={allSelected}
+                onCheckedChange={handleToggleAll}
+                aria-label="Select all"
+              />
+            </TableHead>
+          )}
           <TableHead className="w-16">#</TableHead>
           <TableHead>Title</TableHead>
           <TableHead className="w-24">State</TableHead>
@@ -170,6 +212,15 @@ function PRsTable({
       <TableBody>
         {prs.map((pr) => (
           <TableRow key={pr.number}>
+            {canSelect && selectable && (
+              <TableCell>
+                <Checkbox
+                  checked={selectedNumbers!.has(pr.number)}
+                  onCheckedChange={() => handleToggleOne(pr.number)}
+                  aria-label={`Select PR #${pr.number}`}
+                />
+              </TableCell>
+            )}
             <TableCell className="font-mono text-muted-foreground">
               {pr.number}
             </TableCell>
@@ -200,7 +251,14 @@ function PRsTable({
               )}
             </TableCell>
             <TableCell>
-              <ReadyForReviewBadge value={getReadyForReview(pr, owner, repoName)} />
+              <ReadyForReviewBadge
+                value={getReadyForReview(
+                  pr,
+                  owner,
+                  repoName,
+                  prReadyStatusMap?.[pr.number]?.ready ?? undefined
+                )}
+              />
             </TableCell>
             <TableCell>
               {pr.user ? (
@@ -241,11 +299,20 @@ function filterPRs(
   owner: string,
   repoName: string,
   readyFilter: ReadyForReviewValue | "all",
-  authorFilter: string
+  authorFilter: string,
+  prReadyStatusMap?: Record<number, { ready: boolean } | null>
 ): PRItem[] {
   return prs.filter((pr) => {
     if (readyFilter !== "all") {
-      if (getReadyForReview(pr, owner, repoName) !== readyFilter) return false
+      if (
+        getReadyForReview(
+          pr,
+          owner,
+          repoName,
+          prReadyStatusMap?.[pr.number]?.ready ?? undefined
+        ) !== readyFilter
+      )
+        return false
     }
     if (authorFilter && pr.user?.login !== authorFilter) return false
     return true
@@ -315,6 +382,13 @@ export default function DashboardPullRequestsPage() {
   const [tabValue, setTabValue] = React.useState<string>("open")
   const [refreshKey, setRefreshKey] = React.useState(0)
   const [refreshing, setRefreshing] = React.useState(false)
+  const [prReadyStatusMap, setPrReadyStatusMap] = React.useState<
+    Record<number, { ready: boolean } | null>
+  >({})
+  const [selectedPRs, setSelectedPRs] = React.useState<Set<number>>(new Set())
+  const [actionLoading, setActionLoading] = React.useState(false)
+  const [actionError, setActionError] = React.useState<string | null>(null)
+
   React.useEffect(() => {
     const handler = () => setRefreshKey((k) => k + 1)
     window.addEventListener("pr-ready-for-review-updated", handler)
@@ -376,6 +450,34 @@ export default function DashboardPullRequestsPage() {
       .finally(() => setLoadingClosed(false))
   }, [repo, token, refreshKey])
 
+  // Fetch ready status (checks + template) for each open PR to auto-set Review column to Ready
+  React.useEffect(() => {
+    if (!repo || !token || openPRs.length === 0) return
+    const owner = encodeURIComponent(repo.owner)
+    const repoName = encodeURIComponent(repo.name)
+    const opts = { headers: { Authorization: `Bearer ${token}` } }
+    const fetchOne = (pr: PRItem) =>
+      fetch(
+        `/api/prReadyStatus?owner=${owner}&repoName=${repoName}&prNumber=${pr.number}`,
+        opts
+      )
+        .then((res) => res.json())
+        .then((body: { success?: boolean; ready?: boolean }) => ({
+          number: pr.number,
+          ready: body.success === true && body.ready === true,
+        }))
+        .catch(() => ({ number: pr.number, ready: false }))
+    Promise.all(openPRs.map(fetchOne)).then((results) => {
+      setPrReadyStatusMap((prev) => {
+        const next = { ...prev }
+        for (const r of results) {
+          next[r.number] = { ready: r.ready }
+        }
+        return next
+      })
+    })
+  }, [repo, token, openPRs, refreshKey])
+
   React.useEffect(() => {
     if (!loadingOpen && !loadingClosed) setRefreshing(false)
   }, [loadingOpen, loadingClosed])
@@ -384,6 +486,58 @@ export default function DashboardPullRequestsPage() {
     setRefreshing(true)
     setRefreshKey((k) => k + 1)
   }
+
+  const performBulkAction = async (action: "merge" | "close" | "reopen") => {
+    if (!repo || !token || selectedPRs.size === 0 || actionLoading) return
+    setActionError(null)
+    setActionLoading(true)
+    const numbers = Array.from(selectedPRs)
+    const errors: string[] = []
+    for (const prNumber of numbers) {
+      try {
+        const res = await fetch("/api/prActions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            owner: repo.owner,
+            repoName: repo.name,
+            prNumber,
+            action,
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          errors.push(`#${prNumber}: ${data.message ?? data.error ?? "Failed"}`)
+        }
+      } catch {
+        errors.push(`#${prNumber}: Network error`)
+      }
+    }
+    setActionLoading(false)
+    if (errors.length > 0) {
+      setActionError(errors.slice(0, 3).join("; ") + (errors.length > 3 ? "…" : ""))
+    } else {
+      setSelectedPRs(new Set())
+      setRefreshKey((k) => k + 1)
+    }
+  }
+
+  React.useEffect(() => {
+    setSelectedPRs(new Set())
+    setActionError(null)
+  }, [tabValue])
+
+  const selectedOpen = React.useMemo(() => {
+    return openPRs.filter((p) => selectedPRs.has(p.number))
+  }, [openPRs, selectedPRs])
+  const selectedClosedOnly = React.useMemo(() => {
+    return closedOnlyPRs.filter((p) => selectedPRs.has(p.number))
+  }, [closedOnlyPRs, selectedPRs])
+  const showMergeClose = tabValue === "open" && selectedOpen.length > 0
+  const showReopen = tabValue === "closed" && selectedClosedOnly.length > 0
 
   if (!repo) {
     return (
@@ -487,13 +641,63 @@ export default function DashboardPullRequestsPage() {
                   <span>Loading open PRs…</span>
                 </div>
               ) : (
-                <div className="rounded-lg border border-border">
-                  <PRsTable
-                    prs={filterPRs(openPRs, repo.owner, repo.name, readyForReviewFilter, authorFilter)}
-                    emptyLabel="No open pull requests."
-                    owner={repo.owner}
-                    repoName={repo.name}
-                  />
+                <div className="space-y-3">
+                  {showMergeClose && (
+                    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2">
+                      <span className="text-muted-foreground text-sm">
+                        {selectedOpen.length} PR{selectedOpen.length !== 1 ? "s" : ""} selected
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={actionLoading}
+                        onClick={() => performBulkAction("merge")}
+                      >
+                        {actionLoading ? <Spinner className="mr-2 size-3.5" /> : <GitMergeIcon size={14} className="mr-2 text-green-600" />}
+                        Merge
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={actionLoading}
+                        onClick={() => performBulkAction("close")}
+                        className="hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+                      >
+                        <GitPullRequestClosedIcon size={14} className="mr-2 text-red-600" />
+                        Close
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setSelectedPRs(new Set())}
+                        className="hover:bg-muted"
+                      >
+                        Clear selection
+                      </Button>
+                      {actionError && (
+                        <p className="text-destructive text-xs">{actionError}</p>
+                      )}
+                    </div>
+                  )}
+                  <div className="rounded-lg border border-border">
+                    <PRsTable
+                      prs={filterPRs(
+                      openPRs,
+                      repo.owner,
+                      repo.name,
+                      readyForReviewFilter,
+                      authorFilter,
+                      prReadyStatusMap
+                    )}
+                      emptyLabel="No open pull requests."
+                      owner={repo.owner}
+                      repoName={repo.name}
+                      prReadyStatusMap={prReadyStatusMap}
+                      selectedNumbers={selectedPRs}
+                      onSelectionChange={setSelectedPRs}
+                      tabType="open"
+                    />
+                  </div>
                 </div>
               )}
             </TabsContent>
@@ -506,10 +710,18 @@ export default function DashboardPullRequestsPage() {
               ) : (
                 <div className="rounded-lg border border-border bg-[#8250df]/5">
                   <PRsTable
-                    prs={filterPRs(mergedPRs, repo.owner, repo.name, readyForReviewFilter, authorFilter)}
+                    prs={filterPRs(
+                      mergedPRs,
+                      repo.owner,
+                      repo.name,
+                      readyForReviewFilter,
+                      authorFilter,
+                      prReadyStatusMap
+                    )}
                     emptyLabel="No merged pull requests."
                     owner={repo.owner}
                     repoName={repo.name}
+                    prReadyStatusMap={prReadyStatusMap}
                   />
                 </div>
               )}
@@ -521,13 +733,53 @@ export default function DashboardPullRequestsPage() {
                   <span>Loading closed PRs…</span>
                 </div>
               ) : (
-                <div className="rounded-lg border border-border bg-muted/30">
-                  <PRsTable
-                    prs={filterPRs(closedOnlyPRs, repo.owner, repo.name, readyForReviewFilter, authorFilter)}
-                    emptyLabel="No closed pull requests."
-                    owner={repo.owner}
-                    repoName={repo.name}
-                  />
+                <div className="space-y-3">
+                  {showReopen && (
+                    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2">
+                      <span className="text-muted-foreground text-sm">
+                        {selectedClosedOnly.length} PR{selectedClosedOnly.length !== 1 ? "s" : ""} selected
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={actionLoading}
+                        onClick={() => performBulkAction("reopen")}
+                      >
+                        {actionLoading ? <Spinner className="mr-2 size-3.5" /> : <GitPullRequestIcon size={14} className="mr-2 text-green-600" />}
+                        Reopen
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setSelectedPRs(new Set())}
+                        className="hover:bg-muted"
+                      >
+                        Clear selection
+                      </Button>
+                      {actionError && (
+                        <p className="text-destructive text-xs">{actionError}</p>
+                      )}
+                    </div>
+                  )}
+                  <div className="rounded-lg border border-border bg-muted/30">
+                    <PRsTable
+                      prs={filterPRs(
+                        closedOnlyPRs,
+                        repo.owner,
+                        repo.name,
+                        readyForReviewFilter,
+                        authorFilter,
+                        prReadyStatusMap
+                      )}
+                      emptyLabel="No closed pull requests."
+                      owner={repo.owner}
+                      repoName={repo.name}
+                      prReadyStatusMap={prReadyStatusMap}
+                      selectedNumbers={selectedPRs}
+                      onSelectionChange={setSelectedPRs}
+                      tabType="closed"
+                    />
+                  </div>
                 </div>
               )}
             </TabsContent>
