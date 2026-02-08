@@ -27,8 +27,12 @@ import { cn } from "@/lib/utils";
 import { type Suggestion, useTamboThread } from "@tambo-ai/react";
 import { type VariantProps } from "class-variance-authority";
 import { XIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Collapsible } from "radix-ui";
 import * as React from "react";
+
+/** Fired when the AI finishes a response so pages can refresh their data. */
+export const TAMBO_AI_RESPONSE_COMPLETE = "tambo-ai-response-complete";
 
 /**
  * Props for the MessageThreadCollapsible component
@@ -207,6 +211,17 @@ export const MessageThreadCollapsible = React.forwardRef<
     const { isOpen, setIsOpen, shortcutText } =
       useCollapsibleState(defaultOpen, embedded);
     const { cancel, isIdle } = useTamboThread();
+    const router = useRouter();
+    const prevIdleRef = React.useRef(isIdle);
+
+    // When AI finishes a response (isIdle goes true), refresh the page so dashboard/data updates
+    React.useEffect(() => {
+      if (isIdle && !prevIdleRef.current) {
+        window.dispatchEvent(new CustomEvent(TAMBO_AI_RESPONSE_COMPLETE));
+        router.refresh();
+      }
+      prevIdleRef.current = isIdle;
+    }, [isIdle, router]);
 
     // Ctrl+C: stop the current response (only when a response is in progress; copy works when idle)
     React.useEffect(() => {

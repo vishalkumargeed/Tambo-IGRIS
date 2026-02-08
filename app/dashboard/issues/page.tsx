@@ -170,6 +170,13 @@ export default function DashboardIssuesPage() {
   const [loadingOpen, setLoadingOpen] = React.useState(true)
   const [loadingClosed, setLoadingClosed] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = React.useState(0)
+
+  React.useEffect(() => {
+    const handler = () => setRefreshKey((k) => k + 1)
+    window.addEventListener("tambo-ai-response-complete", handler)
+    return () => window.removeEventListener("tambo-ai-response-complete", handler)
+  }, [])
 
   React.useEffect(() => {
     if (!repo || !token) {
@@ -205,7 +212,7 @@ export default function DashboardIssuesPage() {
       })
       .catch(() => setError("Failed to load closed issues"))
       .finally(() => setLoadingClosed(false))
-  }, [repo, token])
+  }, [repo, token, refreshKey])
 
   if (!repo) {
     return (

@@ -34,8 +34,8 @@ function parsePRListJson(content: string): PRListData | null {
       repo: string;
       prs: unknown[];
     };
-    const list: PRListItem[] = prs
-      .map((p) => {
+    const list = prs
+      .map((p): PRListItem | null => {
         if (p && typeof p === "object" && "number" in p && "title" in p) {
           const num = Number((p as { number: number }).number);
           const title = String((p as { title: string }).title);
@@ -59,10 +59,14 @@ function parsePRListJson(content: string): PRListData | null {
   }
 }
 
+export type PRListState = "open" | "closed";
+
 interface PRSelectionTableProps {
   owner: string;
   repo: string;
   prs: PRListItem[];
+  /** When the list is open PRs use "open" (shows Close selected); when closed PRs use "closed" (shows Open selected). Default "open". */
+  state?: PRListState;
 }
 
 /**
@@ -73,10 +77,12 @@ export function PRSelectionTableInner({
   owner,
   repo,
   prs,
+  state = "open",
 }: PRSelectionTableProps) {
   const { setValue, submit } = useTamboThreadInput();
   const [selected, setSelected] = React.useState<Set<number>>(new Set());
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isSubmittingAlt, setIsSubmittingAlt] = React.useState(false);
 
   const toggle = (num: number) => {
     setSelected((prev) => {
@@ -113,13 +119,33 @@ export function PRSelectionTableInner({
     return () => clearTimeout(t);
   }, [owner, repo, selected, submit, setValue, isSubmitting]);
 
+  const handleCloseOrOpenSelected = React.useCallback(() => {
+    if (selected.size === 0 || isSubmittingAlt) return;
+    const numbers = Array.from(selected).sort((a, b) => a - b);
+    const prList = numbers.map((n) => `#${n}`).join(", ");
+    const message =
+      state === "open"
+        ? `Please close the following PRs using the GitHub MCP (owner: ${owner}, repo: ${repo}): ${prList}. Use update_pull_request with state 'closed' for each PR.`
+        : `Please reopen the following PRs using the GitHub MCP (owner: ${owner}, repo: ${repo}): ${prList}. Use update_pull_request with state 'open' for each PR.`;
+    setValue(message);
+    setIsSubmittingAlt(true);
+    const t = setTimeout(() => {
+      submit({ streamResponse: true, resourceNames: {} })
+        .catch(() => setIsSubmittingAlt(false))
+        .then(() => setIsSubmittingAlt(false));
+    }, 80);
+    return () => clearTimeout(t);
+  }, [owner, repo, state, selected, submit, setValue, isSubmittingAlt]);
+
+  const actionLabel = state === "open" ? "Close selected" : "Open selected";
+
   return (
     <div className="my-4 w-full max-w-3xl rounded-lg border border-border bg-background">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
         <span className="text-sm font-medium text-foreground">
-          Select PRs to review
+          {state === "open" ? "Select PRs to review or close" : "Select PRs to review or reopen"}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={selectAll}
@@ -147,6 +173,21 @@ export function PRSelectionTableInner({
               </>
             ) : (
               `Review selected (${selected.size})`
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={handleCloseOrOpenSelected}
+            disabled={selected.size === 0 || isSubmittingAlt}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted disabled:opacity-50"
+          >
+            {isSubmittingAlt ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Sending…
+              </>
+            ) : (
+              `${actionLabel} (${selected.size})`
             )}
           </button>
         </div>
@@ -219,15 +260,24 @@ export function PRSelectionTableInner({
  * returns a list of PRs (e.g. "template PR" list). Register in lib/tambo.ts so
  * the model can render this with owner, repo, prs and the table appears in the message.
  */
+function normalizePRState(s: unknown): PRListState {
+  const v = typeof s === "string" ? s.trim().toLowerCase() : "";
+  return v === "closed" ? "closed" : "open";
+}
+
 export function PRListTable({
   owner,
   repo,
   prs,
+  state = "open",
 }: {
   owner: string;
   repo: string;
   prs: Array<{ number: number; title: string; url?: string }>;
+  /** "open" for open PRs (shows Close selected), "closed" for closed PRs (shows Open selected). */
+  state?: unknown;
 }) {
+  const prState = normalizePRState(state);
   const normalized: PRListItem[] = React.useMemo(
     () =>
       (prs ?? []).map((p) => ({
@@ -252,6 +302,7 @@ export function PRListTable({
       owner={String(owner ?? "")}
       repo={String(repo ?? "")}
       prs={normalized}
+      state={prState}
     />
   );
 }

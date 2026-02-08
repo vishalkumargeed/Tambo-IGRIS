@@ -318,7 +318,11 @@ export default function DashboardPullRequestsPage() {
   React.useEffect(() => {
     const handler = () => setRefreshKey((k) => k + 1)
     window.addEventListener("pr-ready-for-review-updated", handler)
-    return () => window.removeEventListener("pr-ready-for-review-updated", handler)
+    window.addEventListener("tambo-ai-response-complete", handler)
+    return () => {
+      window.removeEventListener("pr-ready-for-review-updated", handler)
+      window.removeEventListener("tambo-ai-response-complete", handler)
+    }
   }, [])
 
   React.useEffect(() => {

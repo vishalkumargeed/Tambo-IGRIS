@@ -79,6 +79,12 @@ export default function IssueDetailPage() {
     (session?.user as { login?: string } | undefined)?.login ?? null
   )
   React.useEffect(() => {
+    const handler = () => setRefreshKey((k) => k + 1)
+    window.addEventListener("tambo-ai-response-complete", handler)
+    return () => window.removeEventListener("tambo-ai-response-complete", handler)
+  }, [])
+
+  React.useEffect(() => {
     const fromSession = (session?.user as { login?: string } | undefined)?.login
     if (fromSession) {
       setCurrentUserLogin(fromSession)

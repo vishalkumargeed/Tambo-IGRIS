@@ -60,14 +60,23 @@ Render PRReviewStateSync once per PR, immediately after you complete that PR's r
 - Place template adherence issues (for "Template" PRs) at the start of the comment.
 - **Critical:** The review must be **posted to GitHub** by calling **pull_request_review_write** (method `create`, with `body` and `event`). Outputting the review only in the chat is not sufficient—the PR author must see it on the PR.
 
-# When the user asks to LIST or SHOW PRs (e.g. "template PR", "list PRs with Template in title", "show me template PRs"):
+# When the user asks to LIST or SHOW PRs (e.g. "template PR", "list open PRs", "list closed PRs", "show me template PRs"):
 - Do **not** start reviewing immediately. Do **not** reply with only plain text or raw JSON—the user must see an interactive table in the chat.
-- Use the GitHub MCP to fetch the matching open PRs (e.g. `list_pull_requests` with state "open", or `search_pull_requests`; filter so the list matches the user’s request, e.g. PRs whose title contains "Template").
-- You **must** render the **PRListTable** component with the result so the table appears in the message. In your response:
-  1. Optionally give a one-line summary in text (e.g. "Found 2 open Template PRs in owner/repo.").
-  2. **Render the PRListTable component** with props: `owner` (string), `repo` (string), `prs` (array of objects, each with `number` (integer), `title` (string), and `url` (string, the PR’s HTML URL) when available).
-- The table will show checkboxes (select/deselect) and a **Review selected PRs** button. When the user selects PRs and clicks it, you will receive a follow-up like: "Please review the following PRs one by one using the GitHub MCP (owner: X, repo: Y): #1, #2. Apply the full review protocol to each PR. Make sure to adhere the Multiple PRs Review Protocol and the Multi-step Review Protocol" 
-- When you receive that follow-up, review **only** those listed PRs one by one using the GitHub MCP, applying the full Review Protocol, Decision Logic, and Review State Sync above. Pace and retry rules still apply.
+- Use the GitHub MCP to fetch the matching PRs (e.g. `list_pull_requests` with state "open" or "closed", or `search_pull_requests`; filter so the list matches the user’s request).
+- You **must** render the **PRListTable** component with the result. Pass **state** according to the list:
+  - When the list is **open** PRs: pass **state: "open"**. The table will show **Review selected** and **Close selected** (so the user can close PRs).
+  - When the list is **closed** PRs: pass **state: "closed"**. The table will show **Review selected** and **Open selected** (so the user can reopen PRs).
+- Props: `owner`, `repo`, `prs` (array with `number`, `title`, optional `url`), and **state** ("open" or "closed").
+- When the user clicks **Review selected**, you will receive a follow-up to review those PRs; apply the full Review Protocol. When the user clicks **Close selected** or **Open selected**, you will receive a follow-up to close or reopen those PRs via GitHub MCP (`update_pull_request` with state "closed" or "open"). Act accordingly.
+- When you receive the review follow-up, review **only** those listed PRs one by one using the GitHub MCP, applying the full Review Protocol, Decision Logic, and Review State Sync above. Pace and retry rules still apply.
+
+# When the user asks to LIST or SHOW issues (e.g. "list open issues", "list closed issues", "show me issues"):
+- Use the GitHub MCP to fetch issues (e.g. `list_issues` with state "open" or "closed", or `search_issues`). Do **not** reply with only plain text—render an interactive table.
+- You **must** render the **IssueListTable** component with **state** according to the list:
+  - When the list is **open** issues: pass **state: "open"**. The table will show **Close selected** (user can close issues via GitHub MCP).
+  - When the list is **closed** issues: pass **state: "closed"**. The table will show **Open selected** (user can reopen issues via GitHub MCP).
+- Props: `owner`, `repo`, `issues` (array with `number`, `title`, optional `url`), and **state** ("open" or "closed").
+- When the user clicks **Close selected** or **Open selected**, you will receive a follow-up; use **issue_write** with method "update", and state "closed" (with state_reason e.g. "completed") or state "open" for each selected issue.
 
 # When the user asks to REVIEW ALL open PRs (no list/selection):
 - No user selection is required. Immediately act to review all open PRs with the protocol above (UI bypass).

@@ -9,10 +9,17 @@ import type { TamboComponent } from "@tambo-ai/react";
 import { z } from "zod";
 import { ContinueReviewCard } from "@/components/tambo/continue-review-card";
 import { DashboardCustomizer } from "@/components/tambo/dashboard-customizer";
+import { IssueListTable } from "@/components/tambo/issue-selection-table";
 import { PRListTable } from "@/components/tambo/pr-selection-table";
 import { PRReviewStateSync } from "@/components/tambo/pr-review-state-sync";
 
 const prListItemSchema = z.object({
+  number: z.coerce.number().optional().default(0),
+  title: z.string().optional().default(""),
+  url: z.string().optional(),
+});
+
+const issueListItemSchema = z.object({
   number: z.coerce.number().optional().default(0),
   title: z.string().optional().default(""),
   url: z.string().optional(),
@@ -44,12 +51,25 @@ export const components: TamboComponent[] = [
   {
     name: "PRListTable",
     description:
-      "Show an interactive table of pull requests when you have a list of PRs to display (e.g. after listing or searching PRs, or when the user asks for 'template PR' or 'PRs with Template in title'). Always render this component with the owner, repo, and prs array so the user sees a table with checkboxes and a 'Review selected' option. Do not only output the list as text or JSON—render PRListTable so the response includes the table. Each item in prs must have number (PR number), title (string), and optionally url (HTML URL of the PR).",
+      "Show an interactive table of pull requests when you have a list of PRs to display. Pass state: 'open' when the list is open PRs (table shows 'Review selected' and 'Close selected'), or state: 'closed' when the list is closed PRs (table shows 'Review selected' and 'Open selected'). Always render with owner, repo, prs, and the correct state so the user sees the right actions. Each item in prs must have number, title, and optionally url.",
     component: PRListTable,
     propsSchema: z.object({
       owner: z.string().optional().default(""),
       repo: z.string().optional().default(""),
       prs: z.array(prListItemSchema).optional().default([]),
+      state: z.string().optional().default("open"),
+    }),
+  },
+  {
+    name: "IssueListTable",
+    description:
+      "Show an interactive table of issues when you have a list of issues to display. Pass state: 'open' when the list is open issues (table shows 'Close selected'), or state: 'closed' when the list is closed issues (table shows 'Open selected'). Always render with owner, repo, issues array, and the correct state. Each item in issues must have number, title, and optionally url.",
+    component: IssueListTable,
+    propsSchema: z.object({
+      owner: z.string().optional().default(""),
+      repo: z.string().optional().default(""),
+      issues: z.array(issueListItemSchema).optional().default([]),
+      state: z.string().optional().default("open"),
     }),
   },
   {
