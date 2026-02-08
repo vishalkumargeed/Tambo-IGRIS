@@ -3,8 +3,9 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
 import { GitPullRequestIcon, IssueOpenedIcon } from "@primer/octicons-react"
+import { PieChart as PieChartIcon } from "lucide-react"
 
 import {
   Card,
@@ -93,26 +94,27 @@ export function StatsRadialChart() {
   const total = data.reduce((sum, d) => sum + d.value, 0)
 
   return (
-    <Card className="@container/card">
-      <CardHeader>
+    <Card className="@container/card overflow-hidden">
+      <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
+          <PieChartIcon className="size-4 shrink-0 text-primary" aria-hidden />
           Repo stats
         </CardTitle>
         <CardDescription>
-          Click a segment to view PRs or issues. Values from merged PRs, open PRs, open issues, closed issues.
+          Click a segment to view PRs or issues. 
         </CardDescription>
       </CardHeader>
-      <CardContent className="px-4 pt-0 sm:px-6">
+      <CardContent className="min-w-0 overflow-hidden px-0 pt-0 pb-1">
         {!repo ? (
-          <div className="flex h-[280px] items-center justify-center text-muted-foreground text-sm">
+          <div className="flex h-[200px] items-center justify-center text-muted-foreground text-sm">
             Select a repository to see stats
           </div>
         ) : loading ? (
-          <div className="flex h-[280px] items-center justify-center text-muted-foreground text-sm">
+          <div className="flex h-[200px] items-center justify-center text-muted-foreground text-sm">
             Loading…
           </div>
         ) : total === 0 ? (
-          <div className="flex h-[280px] flex-col items-center justify-center gap-4 text-muted-foreground text-sm">
+          <div className="flex h-[200px] flex-col items-center justify-center gap-4 text-muted-foreground text-sm">
             <span>No PRs or issues yet</span>
             <div className="flex flex-wrap justify-center gap-4">
               <Link
@@ -132,76 +134,76 @@ export function StatsRadialChart() {
             </div>
           </div>
         ) : (
-          <ChartContainer
-            config={chartConfig}
-            className="aspect-square h-[280px] w-full"
-          >
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={90}
-                  innerRadius={40}
-                  paddingAngle={2}
-                  strokeWidth={1}
-                  onClick={(_, index) => {
-                    const item = data[index]
-                    if (item) router.push(item.route)
-                  }}
-                  style={{ cursor: "pointer" }}
-                >
-                  {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <ChartTooltip
-                  cursor={false}
-                  content={
-                    <ChartTooltipContent
-                      hideIndicator={false}
-                      formatter={(value) => (
-                        <span className="font-mono tabular-nums">
-                          {Number(value).toLocaleString()}
-                          {total > 0 && (
-                            <span className="text-muted-foreground ml-1">
-                              ({Math.round((Number(value) / total) * 100)}%)
-                            </span>
-                          )}
-                        </span>
-                      )}
-                    />
-                  }
-                />
-                <Legend
-                  verticalAlign="bottom"
-                  height={36}
-                  content={({ payload }) => (
-                    <div className="mt-4 flex flex-wrap justify-center gap-4">
-                      {data.map((item, index) => (
-                        <Link
-                          key={item.name}
-                          href={item.route}
-                          className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-muted"
-                        >
-                          <span
-                            className="h-3 w-3 shrink-0 rounded-[2px]"
-                            style={{ backgroundColor: item.fill }}
-                          />
-                          <span className="text-sm">
-                            {item.name}: {item.value.toLocaleString()}
+          <div className="min-w-0 w-full">
+            <ChartContainer
+              config={chartConfig}
+              className="aspect-square h-[180px] w-full max-w-full shrink-0"
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                  <Pie
+                    data={data}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={58}
+                    innerRadius={26}
+                    paddingAngle={1}
+                    strokeWidth={1}
+                    onClick={(_, index) => {
+                      const item = data[index]
+                      if (item) router.push(item.route)
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
+                    {data.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip
+                    cursor={false}
+                    content={
+                      <ChartTooltipContent
+                        hideIndicator={false}
+                        formatter={(value) => (
+                          <span className="font-mono tabular-nums">
+                            {Number(value).toLocaleString()}
+                            {total > 0 && (
+                              <span className="text-muted-foreground ml-1">
+                                ({Math.round((Number(value) / total) * 100)}%)
+                              </span>
+                            )}
                           </span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+                        )}
+                      />
+                    }
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+            <div className="mt-0.5 flex min-w-0 max-w-full flex-wrap justify-center gap-x-1.5 gap-y-0.5">
+              {data.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.route}
+                  className="inline-flex min-w-0 max-w-full shrink-0 items-center gap-1 rounded px-0.5 py-0.5 transition-colors hover:bg-muted sm:max-w-[50%]"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    router.push(item.route)
+                  }}
+                >
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-sm"
+                    style={{ backgroundColor: item.fill }}
+                  />
+                  <span className="min-w-0 truncate text-[11px] leading-tight">
+                    {item.name}: {item.value.toLocaleString()}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>

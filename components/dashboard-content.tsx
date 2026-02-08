@@ -29,11 +29,11 @@ export function DashboardContent() {
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           {merged.showSectionCards && merged.statsDisplayVariant === "radial" && merged.showChart ? (
-            <div className="flex flex-col gap-4 px-4 md:gap-6 lg:flex-row lg:justify-between lg:px-6">
-              <div className="min-w-0 w-full lg:max-w-[360px]">
+            <div className="flex flex-col gap-4 px-4 md:gap-6 lg:flex-row lg:items-stretch lg:gap-6 lg:px-6">
+              <div className="min-w-0 w-full shrink-0 lg:w-[320px]">
                 <StatsRadialChart />
               </div>
-              <div className="min-w-0 w-full lg:max-w-[360px]">
+              <div className="min-w-0 flex-1 w-full">
                 <ChartAreaInteractive />
               </div>
             </div>
