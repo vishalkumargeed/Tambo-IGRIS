@@ -16,6 +16,8 @@ export interface DashboardCustomizerProps {
   showChart?: boolean
   /** Show the data table */
   showDataTable?: boolean
+  /** Contributors section: table (default) or bar (interactive bar chart) */
+  contributorsDisplayVariant?: "table" | "bar"
   /** Sidebar width: narrow, default, wide */
   sidebarWidth?: "narrow" | "default" | "wide"
   /** Accent color (e.g. #3b82f6 or blue) */
@@ -38,6 +40,7 @@ export function DashboardCustomizer({
   showSectionCards,
   showChart,
   showDataTable,
+  contributorsDisplayVariant,
   sidebarWidth,
   accentColor,
   cardStyle,
@@ -57,6 +60,7 @@ export function DashboardCustomizer({
     if (showSectionCards !== undefined) updates.showSectionCards = showSectionCards
     if (showChart !== undefined) updates.showChart = showChart
     if (showDataTable !== undefined) updates.showDataTable = showDataTable
+    if (contributorsDisplayVariant !== undefined) updates.contributorsDisplayVariant = contributorsDisplayVariant
     if (sidebarWidth !== undefined) updates.sidebarWidth = sidebarWidth
     if (accentColor !== undefined) updates.accentColor = accentColor
     if (cardStyle !== undefined) updates.cardStyle = cardStyle
@@ -70,6 +74,7 @@ export function DashboardCustomizer({
     showSectionCards,
     showChart,
     showDataTable,
+    contributorsDisplayVariant,
     sidebarWidth,
     accentColor,
     cardStyle,

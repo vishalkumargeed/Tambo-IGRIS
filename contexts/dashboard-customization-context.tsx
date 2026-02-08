@@ -15,6 +15,8 @@ export type DashboardCustomization = {
   showSectionCards?: boolean
   showChart?: boolean
   showDataTable?: boolean
+  /** Contributors section: table (default) or bar (interactive bar chart) */
+  contributorsDisplayVariant?: "table" | "bar"
   /** Sidebar width */
   sidebarWidth?: "narrow" | "default" | "wide"
   /** Accent color (CSS color or hex) */
@@ -30,6 +32,7 @@ const defaults: Required<DashboardCustomization> = {
   showSectionCards: true,
   showChart: true,
   showDataTable: true,
+  contributorsDisplayVariant: "table",
   sidebarWidth: "default",
   accentColor: "",
   cardStyle: "default",
@@ -51,6 +54,8 @@ function loadFromStorage(): DashboardCustomization {
     if (typeof parsed.showSectionCards === "boolean") out.showSectionCards = parsed.showSectionCards
     if (typeof parsed.showChart === "boolean") out.showChart = parsed.showChart
     if (typeof parsed.showDataTable === "boolean") out.showDataTable = parsed.showDataTable
+    if (parsed.contributorsDisplayVariant === "table" || parsed.contributorsDisplayVariant === "bar")
+      out.contributorsDisplayVariant = parsed.contributorsDisplayVariant
     if (parsed.sidebarWidth === "narrow" || parsed.sidebarWidth === "default" || parsed.sidebarWidth === "wide")
       out.sidebarWidth = parsed.sidebarWidth
     if (typeof parsed.accentColor === "string" && parsed.accentColor) out.accentColor = parsed.accentColor

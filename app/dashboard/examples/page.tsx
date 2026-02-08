@@ -126,6 +126,23 @@ const EXAMPLES: {
     prompt: "Show the stats as cards again.",
   },
   {
+    id: "contributors-bar-chart",
+    category: "dashboard",
+    categoryLabel: "Dashboard",
+    title: "Contributors as bar chart",
+    description: "Show top contributors in an interactive bar chart with a dropdown to select 10, 50, or 200 contributors.",
+    prompt: "Show contributors in an interactive bar chart.",
+    featured: true,
+  },
+  {
+    id: "contributors-back-to-table",
+    category: "dashboard",
+    categoryLabel: "Dashboard",
+    title: "Contributors as table",
+    description: "Switch back from the bar chart to the default contributors table.",
+    prompt: "Show contributors as a table again.",
+  },
+  {
     id: "what-can-you-do",
     category: "general",
     categoryLabel: "General",

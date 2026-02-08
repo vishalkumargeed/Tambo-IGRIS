@@ -1,6 +1,7 @@
 "use client"
 
 import { ChartAreaInteractive } from "@/components/chart-area-interactive"
+import { ContributorsBarChart } from "@/components/contributors-bar-chart"
 import { DataTable } from "@/components/data-table"
 import { SectionCards } from "@/components/section-cards"
 import { StatsRadialChart } from "@/components/stats-radial-chart"
@@ -54,7 +55,14 @@ export function DashboardContent() {
               )}
             </>
           )}
-          {merged.showDataTable && <DataTable />}
+          {merged.showDataTable &&
+            (merged.contributorsDisplayVariant === "bar" ? (
+              <div className="px-4 lg:px-6">
+                <ContributorsBarChart />
+              </div>
+            ) : (
+              <DataTable />
+            ))}
         </div>
       </div>
     </div>

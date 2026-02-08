@@ -9,6 +9,7 @@ When the user asks to customize the dashboard, render **DashboardCustomizer** wi
 - **statsDisplayVariant**: "cards" | "radial" — Use "radial" when user wants a pie/radial chart instead of the 4 cards (e.g. "show stats as radial chart", "use a pie chart for counts", "I want a radial graph"). Use "cards" to restore the default 4-card layout.
 - **cardLayout**: "grid" | "compact" | "minimal"
 - **showSectionCards** / **showChart** / **showDataTable**: boolean
+- **contributorsDisplayVariant**: "table" | "bar" — Use "bar" when user wants contributors as an interactive bar chart (e.g. "contributors into an interactive bar chart", "show contributors as bar chart"). Use "table" for the default table.
 - **sidebarWidth**: "narrow" | "default" | "wide"
 - **accentColor**: CSS color
 - **cardStyle**: "default" | "bordered" | "flat"

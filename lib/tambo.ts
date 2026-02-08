@@ -37,7 +37,7 @@ export const components: TamboComponent[] = [
   {
     name: "DashboardCustomizer",
     description:
-      "Customize the dashboard look. Use when the user asks to change dashboard appearance: theme (light/dark), show/hide sections (cards, chart, table), stats display (cards vs radial/pie chart), card layout (grid/compact/minimal), sidebar width (narrow/default/wide), accent color, or card style (default/bordered/flat). For stats display: pass statsDisplayVariant: 'radial' when user wants a radial/pie chart instead of 4 cards (e.g. 'show stats as pie chart', 'use radial graph', 'I want a radial chart for the counts'); pass statsDisplayVariant: 'cards' to restore the 4-card layout. Pass reset: true to restore defaults.",
+      "Customize the dashboard look. Use when the user asks to change dashboard appearance: theme (light/dark), show/hide sections (cards, chart, table), stats display (cards vs radial/pie chart), contributors display (table vs bar chart), card layout (grid/compact/minimal), sidebar width (narrow/default/wide), accent color, or card style (default/bordered/flat). For stats display: pass statsDisplayVariant: 'radial' when user wants a radial/pie chart instead of 4 cards. For contributors: pass contributorsDisplayVariant: 'bar' when user wants contributors as an interactive bar chart (e.g. 'show contributors as bar chart', 'contributors into an interactive bar chart'); pass contributorsDisplayVariant: 'table' to show the default table. Pass reset: true to restore defaults.",
     component: DashboardCustomizer,
     propsSchema: z.object({
       theme: z.enum(["light", "dark", "system"]).optional().catch(undefined),
@@ -46,6 +46,7 @@ export const components: TamboComponent[] = [
       showSectionCards: z.boolean().optional(),
       showChart: z.boolean().optional(),
       showDataTable: z.boolean().optional(),
+      contributorsDisplayVariant: z.enum(["table", "bar"]).optional().catch(undefined),
       sidebarWidth: z.enum(["narrow", "default", "wide"]).optional().catch(undefined),
       accentColor: z.string().optional(),
       cardStyle: z.enum(["default", "bordered", "flat"]).optional().catch(undefined),
