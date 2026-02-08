@@ -1,5 +1,6 @@
 import SignIn from "./components/authentication/Signin"
 import { PixelBlast } from "@/components/ui/pixel-blast"
+import Youtube from "./components/Youtube"
 
 export default function Home() {
   return (
@@ -37,12 +38,15 @@ export default function Home() {
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-12">
         <div className="flex max-w-xl flex-col items-center gap-6 text-center">
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-white sm:text-3xl lg:text-4xl whitespace-nowrap">
-            Tambo AI
+            Sentinel AI 
           </h1>
           <p className="font-sans text-base text-zinc-400 sm:text-lg whitespace-nowrap">
-            AI-powered PR reviews, issues, and UI/UX design in one place.
+            Github & User Experience Designer
           </p>
-          <SignIn />
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            <SignIn />
+            <Youtube />
+          </div>
         </div>
       </div>
     </div>
