@@ -1,6 +1,7 @@
 "use client"
 
 import { ChartAreaInteractive } from "@/components/chart-area-interactive"
+import { ContributorInsightsCard } from "@/components/contributor-insights-card"
 import { ContributorsBarChart } from "@/components/contributors-bar-chart"
 import { DataTable } from "@/components/data-table"
 import { SectionCards } from "@/components/section-cards"
@@ -57,8 +58,13 @@ export function DashboardContent() {
           )}
           {merged.showDataTable &&
             (merged.contributorsDisplayVariant === "bar" ? (
-              <div className="px-4 lg:px-6">
-                <ContributorsBarChart />
+              <div className="flex flex-col gap-4 px-4 md:gap-6 lg:flex-row lg:items-stretch lg:px-6">
+                <div className="min-w-0 shrink-0 lg:w-[280px] xl:w-[320px]">
+                  <ContributorInsightsCard />
+                </div>
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <ContributorsBarChart />
+                </div>
               </div>
             ) : (
               <DataTable />

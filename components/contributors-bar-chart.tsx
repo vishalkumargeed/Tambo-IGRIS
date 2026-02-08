@@ -92,7 +92,7 @@ export function ContributorsBarChart() {
   )
 
   return (
-    <Card>
+    <Card className="flex h-full flex-col">
       <CardHeader className="flex flex-col gap-4 border-b sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
           <CardTitle className="flex items-center gap-2">
@@ -120,23 +120,23 @@ export function ContributorsBarChart() {
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent className="px-2 pt-4 sm:p-6">
+      <CardContent className="flex min-h-0 flex-1 flex-col px-2 pt-4 sm:p-6">
         {!repo ? (
-          <div className="flex h-[250px] items-center justify-center text-muted-foreground text-sm">
+          <div className="flex min-h-[250px] flex-1 items-center justify-center text-muted-foreground text-sm">
             Select a repository to see contributors
           </div>
         ) : loading ? (
-          <div className="flex h-[250px] items-center justify-center text-muted-foreground text-sm">
+          <div className="flex min-h-[250px] flex-1 items-center justify-center text-muted-foreground text-sm">
             Loading…
           </div>
         ) : chartData.length === 0 ? (
-          <div className="flex h-[250px] items-center justify-center text-muted-foreground text-sm">
+          <div className="flex min-h-[250px] flex-1 items-center justify-center text-muted-foreground text-sm">
             No contributors found
           </div>
         ) : (
           <ChartContainer
             config={chartConfig}
-            className="aspect-auto h-[250px] w-full"
+            className="aspect-auto min-h-[250px] w-full flex-1"
           >
             <BarChart
               accessibilityLayer
