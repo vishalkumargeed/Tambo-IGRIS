@@ -83,6 +83,7 @@ export function PRSelectionTableInner({
   const [selected, setSelected] = React.useState<Set<number>>(new Set());
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSubmittingAlt, setIsSubmittingAlt] = React.useState(false);
+  const [isSubmittingMerge, setIsSubmittingMerge] = React.useState(false);
 
   const toggle = (num: number) => {
     setSelected((prev) => {
@@ -137,6 +138,21 @@ export function PRSelectionTableInner({
     return () => clearTimeout(t);
   }, [owner, repo, state, selected, submit, setValue, isSubmittingAlt]);
 
+  const handleMergeSelected = React.useCallback(() => {
+    if (selected.size === 0 || isSubmittingMerge) return;
+    const numbers = Array.from(selected).sort((a, b) => a - b);
+    const prList = numbers.map((n) => `#${n}`).join(", ");
+    const message = `Please merge the following open PRs. For each PR, render MergePRCard so the user can enter a commit message and merge (owner: ${owner}, repo: ${repo}): ${prList}.`;
+    setValue(message);
+    setIsSubmittingMerge(true);
+    const t = setTimeout(() => {
+      submit({ streamResponse: true, resourceNames: {} })
+        .catch(() => setIsSubmittingMerge(false))
+        .then(() => setIsSubmittingMerge(false));
+    }, 80);
+    return () => clearTimeout(t);
+  }, [owner, repo, selected, submit, setValue, isSubmittingMerge]);
+
   const actionLabel = state === "open" ? "Close selected" : "Open selected";
 
   return (
@@ -175,6 +191,23 @@ export function PRSelectionTableInner({
               `Review selected (${selected.size})`
             )}
           </button>
+          {state === "open" && (
+            <button
+              type="button"
+              onClick={handleMergeSelected}
+              disabled={selected.size === 0 || isSubmittingMerge}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted disabled:opacity-50"
+            >
+              {isSubmittingMerge ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Sending…
+                </>
+              ) : (
+                `Merge selected (${selected.size})`
+              )}
+            </button>
+          )}
           <button
             type="button"
             onClick={handleCloseOrOpenSelected}

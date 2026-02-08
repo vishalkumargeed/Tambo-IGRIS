@@ -8,8 +8,10 @@
 import type { TamboComponent } from "@tambo-ai/react";
 import { z } from "zod";
 import { ContinueReviewCard } from "@/components/tambo/continue-review-card";
+import { CreateIssueCard } from "@/components/tambo/create-issue-card";
 import { DashboardCustomizer } from "@/components/tambo/dashboard-customizer";
 import { IssueListTable } from "@/components/tambo/issue-selection-table";
+import { MergePRCard } from "@/components/tambo/merge-pr-card";
 import { PRListTable } from "@/components/tambo/pr-selection-table";
 import { PRReviewStateSync } from "@/components/tambo/pr-review-state-sync";
 
@@ -51,7 +53,7 @@ export const components: TamboComponent[] = [
   {
     name: "PRListTable",
     description:
-      "Show an interactive table of pull requests when you have a list of PRs to display. Pass state: 'open' when the list is open PRs (table shows 'Review selected' and 'Close selected'), or state: 'closed' when the list is closed PRs (table shows 'Review selected' and 'Open selected'). Always render with owner, repo, prs, and the correct state so the user sees the right actions. Each item in prs must have number, title, and optionally url.",
+      "Show an interactive table of pull requests when you have a list of PRs to display. Pass state: 'open' when the list is open PRs (table shows 'Review selected', 'Merge selected', and 'Close selected'), or state: 'closed' when the list is closed PRs (table shows 'Review selected' and 'Open selected'). Always render with owner, repo, prs, and the correct state so the user sees the right actions. Each item in prs must have number, title, and optionally url. When the user clicks Merge selected, you will receive a follow-up; render MergePRCard for each listed PR so they can enter a commit message and merge.",
     component: PRListTable,
     propsSchema: z.object({
       owner: z.string().optional().default(""),
@@ -89,6 +91,29 @@ export const components: TamboComponent[] = [
       repo: z.string().optional().default(""),
       prNumber: z.coerce.number().optional().default(0),
       value: z.string().optional().default("Not Ready"),
+    }),
+  },
+  {
+    name: "MergePRCard",
+    description:
+      "Render when the user says they want to merge a particular PR. Shows a card with an input for the merge commit message. Pass owner (GitHub owner), repo (repository name), prNumber (PR number), and optionally prTitle (PR title for display). The user fills the commit message and clicks Merge; then you perform the merge via GitHub MCP using that commit message.",
+    component: MergePRCard,
+    propsSchema: z.object({
+      owner: z.string().optional().default(""),
+      repo: z.string().optional().default(""),
+      prNumber: z.coerce.number().optional().default(0),
+      prTitle: z.string().optional(),
+    }),
+  },
+  {
+    name: "CreateIssueCard",
+    description:
+      "Render when the user asks to create a new issue (e.g. 'create an issue', 'I want to create an issue'). Shows a card with Title (required) and Description (optional) inputs. Pass owner (GitHub owner) and repo (repository name); optionally repoFullName for display (e.g. 'owner/repo'). When the user fills the form and clicks Create issue, you will receive a follow-up with the title and body—use the GitHub MCP (e.g. issue_write or create issue) to create the issue in that repository.",
+    component: CreateIssueCard,
+    propsSchema: z.object({
+      owner: z.string().optional().default(""),
+      repo: z.string().optional().default(""),
+      repoFullName: z.string().optional(),
     }),
   },
 ];
