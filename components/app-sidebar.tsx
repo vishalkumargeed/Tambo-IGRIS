@@ -6,6 +6,7 @@ import {
   GitPullRequestIcon,
   CodeIcon,
   MarkGithubIcon,
+  BookIcon,
 } from "@primer/octicons-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -46,6 +47,11 @@ const data = {
       title: "Codebase",
       url: "/dashboard/code",
       icon: CodeIcon,
+    },
+    {
+      title: "Examples",
+      url: "/dashboard/examples",
+      icon: BookIcon,
     },
   ],
  

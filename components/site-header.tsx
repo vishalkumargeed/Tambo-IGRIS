@@ -25,6 +25,8 @@ function getHeaderTitle(pathname: string | null): string {
   if (pathname.startsWith("/dashboard/issues")) return "Issues"
   if (pathname.startsWith("/dashboard/pull-requests")) return "Pull Requests"
   if (pathname.startsWith("/dashboard/code")) return "Codebase"
+  if (pathname.startsWith("/dashboard/examples")) return "Examples"
+  if (pathname.startsWith("/dashboard/account")) return "Account"
   return "Dashboard"
 }
 
@@ -49,7 +51,7 @@ export function SiteHeader() {
   }, [open])
 
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+    <header className="sticky top-0 z-10 flex h-(--header-height) shrink-0 items-center gap-2 border-b bg-background transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <SidebarTrigger className="-ml-1" />
         <Separator

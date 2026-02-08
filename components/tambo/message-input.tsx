@@ -484,6 +484,18 @@ const MessageInputInternal = React.forwardRef<
     }
   }, [value, thread.id]);
 
+  // When Examples page (or elsewhere) dispatches tambo-insert-prompt, set the input value
+  React.useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ prompt: string }>).detail;
+      if (detail?.prompt && typeof detail.prompt === "string") {
+        setValue(detail.prompt);
+      }
+    };
+    window.addEventListener("tambo-insert-prompt", handler);
+    return () => window.removeEventListener("tambo-insert-prompt", handler);
+  }, [setValue]);
+
   const handleSubmit = React.useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
