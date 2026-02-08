@@ -23,7 +23,15 @@ export async function GET(request: NextRequest) {
 
     const perPage = Math.min(limit, 100);
     const pages = limit <= 100 ? 1 : 2;
-    const allData: unknown[] = [];
+    type RawContributor = {
+      id: number;
+      login: string;
+      avatar_url: string;
+      contributions: number;
+      type?: string;
+      html_url?: string;
+    };
+    const allData: RawContributor[] = [];
     for (let page = 1; page <= pages; page++) {
       const res = await fetch(
         `https://api.github.com/repos/${owner}/${repoName}/contributors?per_page=${perPage}&page=${page}`,
@@ -43,18 +51,11 @@ export async function GET(request: NextRequest) {
       }
       const data = await res.json();
       if (!Array.isArray(data)) break;
-      allData.push(...data);
+      allData.push(...(data as RawContributor[]));
       if (data.length < perPage) break;
     }
     const contributors = allData.map(
-      (c: {
-        id: number;
-        login: string;
-        avatar_url: string;
-        contributions: number;
-        type?: string;
-        html_url?: string;
-      }) => ({
+      (c: RawContributor) => ({
         id: c.id,
         login: c.login,
         avatarUrl: c.avatar_url,
