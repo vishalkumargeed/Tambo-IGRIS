@@ -386,6 +386,12 @@ body {
   --ring: #eab308;
 }
 
+/* Black background only for home (/) page */
+.home-page {
+  background: black;
+  min-height: 100vh;
+}
+
 @layer base {
 
   * {
