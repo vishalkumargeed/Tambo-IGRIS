@@ -91,6 +91,11 @@ const DashboardCustomizationContext = React.createContext<
 export function DashboardCustomizationProvider({ children }: { children: React.ReactNode }) {
   const [customization, setCustomization] = React.useState<DashboardCustomization>(loadFromStorage)
 
+  /* Sync from localStorage on mount (SSR initial state is empty; client has localStorage) */
+  React.useEffect(() => {
+    setCustomization(loadFromStorage())
+  }, [])
+
   React.useEffect(() => {
     const handler = () => setCustomization(loadFromStorage())
     window.addEventListener("dashboard-customization-updated", handler)

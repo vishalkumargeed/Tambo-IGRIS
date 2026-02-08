@@ -110,6 +110,7 @@ const EXAMPLES: {
     prompt: "Customize the dashboard: switch to dark theme and use compact card layout.",
     featured: true,
     examplePrompts: [
+      "Change the theme color.",
       "Show repo stats as a radial chart instead of cards.",
       "Show contributors in a bar chart with insights.",
       "Use dark theme and a wider sidebar.",

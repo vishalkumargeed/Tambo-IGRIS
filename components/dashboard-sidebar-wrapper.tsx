@@ -14,16 +14,14 @@ export function DashboardSidebarWrapper({ children }: { children: React.ReactNod
   const { merged } = useDashboardCustomization()
   const width = sidebarWidthMap[merged.sidebarWidth] ?? sidebarWidthMap.default
 
-  return (
-    <SidebarProvider
-      style={
-        {
-          "--sidebar-width": width,
-          "--header-height": "calc(var(--spacing) * 12)",
-        } as React.CSSProperties
-      }
-    >
-      {children}
-    </SidebarProvider>
+  const style = React.useMemo(
+    () =>
+      ({
+        "--sidebar-width": width,
+        "--header-height": "calc(var(--spacing) * 12)",
+      }) as React.CSSProperties,
+    [width],
   )
+
+  return <SidebarProvider style={style}>{children}</SidebarProvider>
 }

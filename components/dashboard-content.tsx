@@ -44,10 +44,7 @@ export function DashboardContent() {
   }
 
   return (
-    <div
-      className="flex flex-1 flex-col"
-      style={merged.accentColor ? { "--accent": merged.accentColor } as React.CSSProperties : undefined}
-    >
+    <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           {merged.showSectionCards && merged.statsDisplayVariant === "radial" && merged.showChart ? (

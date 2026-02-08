@@ -15,6 +15,7 @@ import { IssueListTable } from "@/components/tambo/issue-selection-table";
 import { MergePRCard } from "@/components/tambo/merge-pr-card";
 import { PRListTable } from "@/components/tambo/pr-selection-table";
 import { PRReviewStateSync } from "@/components/tambo/pr-review-state-sync";
+import { ThemeColorPicker } from "@/components/tambo/theme-color-picker";
 
 const prListItemSchema = z.object({
   number: z.coerce.number().optional().default(0),
@@ -51,6 +52,15 @@ export const components: TamboComponent[] = [
       accentColor: z.string().optional(),
       cardStyle: z.enum(["default", "bordered", "flat"]).optional().catch(undefined),
       reset: z.boolean().optional(),
+    }),
+  },
+  {
+    name: "ThemeColorPicker",
+    description:
+      "Render when the user asks to change the theme color, accent color, or pick a color for the dashboard (e.g. 'change the theme color', 'I want a blue theme', 'set accent to purple', 'let me pick a color'). This component shows a dropdown with all available colors (Amber, Blue, Cyan, Emerald, Fuchsia, Green, Indigo, Lime, Orange, Pink, Purple, Red, Rose, Sky, Teal, Violet, Yellow). The user selects from the dropdown and the dashboard accent updates instantly—no further AI round-trip. Do NOT pass a specific color; just render the component so the user can choose. Optional: pass label (string) for the card title.",
+    component: ThemeColorPicker,
+    propsSchema: z.object({
+      label: z.string().optional(),
     }),
   },
   {
