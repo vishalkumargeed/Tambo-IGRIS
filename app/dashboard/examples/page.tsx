@@ -30,6 +30,8 @@ const EXAMPLES: {
   prompt: string
   /** Bento grid: span 2 cols or 2 rows for emphasis */
   featured?: boolean
+  /** Extra example prompts shown in the card (e.g. for "Customize the dashboard") */
+  examplePrompts?: string[]
 }[] = [
   {
     id: "review-all",
@@ -104,18 +106,33 @@ const EXAMPLES: {
     category: "dashboard",
     categoryLabel: "Dashboard",
     title: "Customize the dashboard",
-    description: "Change the entire dashboard to match your preference: theme (light/dark), card layout (grid/compact/minimal), sidebar width, accent color, show or hide sections, and more. Just describe what you want.",
+    description: "Change the dashboard to match your preference: theme (light/dark), card layout (grid/compact/minimal), sidebar width, accent color, and which sections to show. You can ask for stats as a radial chart, contributors as a table or bar chart, and more.",
     prompt: "Customize the dashboard: switch to dark theme and use compact card layout.",
     featured: true,
+    examplePrompts: [
+      "Show repo stats as a radial chart instead of cards.",
+      "Show contributors in a bar chart with insights.",
+      "Use dark theme and a wider sidebar.",
+      "Use minimal card layout and hide the chart section.",
+      "Show stats as cards again and contributors as a table.",
+    ],
   },
   {
     id: "stats-radial-chart",
     category: "dashboard",
     categoryLabel: "Dashboard",
     title: "Show stats as radial chart",
-    description: "Replace the 4 cards with a pie/radial chart. All 4 labels (Merged PRs, Open PRs, Open Issues, Closed Issues) are clickable and navigate to the relevant route.",
+    description: "Replace the 4 cards with a pie/radial chart (repo stats only; contributors section unchanged). All 4 labels (Merged PRs, Open PRs, Open Issues, Closed Issues) are clickable.",
     prompt: "Show the repo stats as a radial chart instead of cards.",
     featured: true,
+  },
+  {
+    id: "stats-radial-graph",
+    category: "dashboard",
+    categoryLabel: "Dashboard",
+    title: "Repo stats as radial graph",
+    description: "Same as above: show only the repo stats (PR/Issue counts) as a radial graph. Do not change the contributors section.",
+    prompt: "Show me the repo stats in the form of radial graph.",
   },
   {
     id: "stats-back-to-cards",
@@ -223,6 +240,28 @@ function ExampleCard({
         <div className="rounded-md border bg-muted/50 px-3 py-2 font-mono text-xs text-muted-foreground">
           &ldquo;{example.prompt}&rdquo;
         </div>
+        {example.examplePrompts && example.examplePrompts.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-medium text-muted-foreground">More examples you can try:</p>
+            <ul className="flex flex-col gap-1.5">
+              {example.examplePrompts.map((promptText, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <span className="min-w-0 flex-1 truncate rounded border border-transparent bg-muted/30 px-2 py-1.5 font-mono text-[11px] text-muted-foreground">
+                    &ldquo;{promptText}&rdquo;
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 shrink-0 px-2 text-xs"
+                    onClick={() => onTryInChat(promptText)}
+                  >
+                    Try
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="mt-auto flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={handleCopy} className="gap-1.5">
             <Copy className="h-3.5 w-3.5" />
@@ -281,6 +320,7 @@ export default function DashboardExamplesPage() {
             key={example.id}
             className={cn(
               example.featured && "sm:col-span-2",
+              example.id === "customize-dashboard" && "sm:row-span-2",
             )}
           >
             <ExampleCard

@@ -28,7 +28,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
 
   return (
     <TamboProviderWithUser
-      apiKey={process.env.NEXT_PUBLIC_TAMBO_API_KEY!}
+      apiKey={process.env.TAMBO_API_KEY!}
       userToken={userToken}
       user={session?.user ?? undefined}
       owner={owner ?? undefined}

@@ -115,8 +115,7 @@ NEXTAUTH_URL=http://localhost:3000
 # NEXTAUTH_URL=https://your-domain.com
 
 # Tambo AI
-NEXT_PUBLIC_TAMBO_API_KEY=your_tambo_api_key
-```
+
 
 #### GitHub OAuth setup
 
@@ -223,7 +222,7 @@ For **Vercel**:
    - `GITHUB_CLIENT_ID`
    - `GITHUB_CLIENT_SECRET`
    - `NEXTAUTH_URL` (Vercel often sets `VERCEL_URL` automatically)
-   - `NEXT_PUBLIC_TAMBO_API_KEY`
+   - `TAMBO_API_KEY`
 4. Deploy – Vercel will run `npm install`, `npm run build`, and then host the app.
 
 Make sure your **GitHub OAuth callback URL** matches the production domain (e.g. `https://your-domain.com/api/auth/callback/github`).

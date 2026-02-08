@@ -8,11 +8,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
       authorization: {
         params: {
-          scope: "read:user user:email repo", 
+          scope: "read:user user:email repo",
         },
       },
     }),
   ],
+  pages: {
+    signIn: "/",
+  },
   callbacks: {
     jwt({ token, account, profile }) {
       if (account) token.accessToken = account.access_token
@@ -27,6 +30,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.login = token.login as string | null | undefined
       }
       return session
+    },
+    authorized({ auth, request }) {
+      const isOnDashboard = request.nextUrl.pathname.startsWith("/dashboard")
+      if (isOnDashboard) return !!auth
+      return true
     },
   },
 })

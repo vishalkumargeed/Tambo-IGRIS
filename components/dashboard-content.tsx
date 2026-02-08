@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 import { ContributorInsightsCard } from "@/components/contributor-insights-card"
 import { ContributorsBarChart } from "@/components/contributors-bar-chart"
@@ -19,6 +20,25 @@ export function DashboardContent() {
         <h2 className="text-center text-xl font-semibold text-muted-foreground md:text-2xl">
           Tambo Sentinel → Select a repo (Look up)
         </h2>
+      </div>
+    )
+  }
+
+  const hasAnySection =
+    merged.showSectionCards || merged.showChart || merged.showDataTable
+
+  if (!hasAnySection) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4">
+        <h2 className="text-center text-xl font-semibold text-muted-foreground md:text-2xl">
+          Check examples or ask Sentinel: &quot;show all the dashboard components&quot;
+        </h2>
+        <Link
+          href="/dashboard/examples"
+          className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+        >
+          View example prompts
+        </Link>
       </div>
     )
   }
