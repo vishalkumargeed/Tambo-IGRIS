@@ -21,6 +21,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Card,
   CardContent,
@@ -106,6 +107,9 @@ function ChecksIcon({ conclusion }: { status: string; conclusion: string | null 
   return <DotFillIcon size={16} className="text-yellow-500 shrink-0" />
 }
 
+const PR_DETAIL_TAB_KEY = "pr-detail-tab"
+const PR_TAB_VALUES = ["description", "conversations", "commits", "checks", "files"] as const
+
 export default function PRDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -124,9 +128,32 @@ export default function PRDetailPage() {
   const [refreshKey, setRefreshKey] = React.useState(0)
   const [refreshing, setRefreshing] = React.useState(false)
   const [selectedFilename, setSelectedFilename] = React.useState<string | null>(null)
+  const [newComment, setNewComment] = React.useState("")
+  const [commentSubmitting, setCommentSubmitting] = React.useState(false)
+  const [commentError, setCommentError] = React.useState<string | null>(null)
   const [currentUserLogin, setCurrentUserLogin] = React.useState<string | null>(
     (session?.user as { login?: string } | undefined)?.login ?? null
   )
+  const [activeTab, setActiveTab] = React.useState<string>("description")
+
+  React.useEffect(() => {
+    try {
+      const stored = typeof window !== "undefined" ? localStorage.getItem(PR_DETAIL_TAB_KEY) : null
+      if (stored && (PR_TAB_VALUES as readonly string[]).includes(stored)) setActiveTab(stored)
+    } catch {
+      /* ignore */
+    }
+  }, [])
+
+  const handleTabChange = React.useCallback((value: string) => {
+    setActiveTab(value)
+    try {
+      localStorage.setItem(PR_DETAIL_TAB_KEY, value)
+    } catch {
+      /* ignore */
+    }
+  }, [])
+
   React.useEffect(() => {
     const handler = () => setRefreshKey((k) => k + 1)
     window.addEventListener("tambo-ai-response-complete", handler)
@@ -282,6 +309,51 @@ export default function PRDetailPage() {
     setRefreshKey((k) => k + 1)
   }
 
+  const conversationsEndRef = React.useRef<HTMLDivElement>(null)
+
+  const handleAddComment = async () => {
+    if (!repo || !token || !number || !newComment.trim() || commentSubmitting) return
+    setCommentError(null)
+    setCommentSubmitting(true)
+    try {
+      const res = await fetch("/api/addComment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          owner: repo.owner,
+          repoName: repo.name,
+          issueNumber: number,
+          body: newComment.trim(),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setCommentError(data.message ?? data.error ?? "Failed to add comment")
+        return
+      }
+      const created = data.data
+      const newEntry: Comment = {
+        id: created?.id ?? Date.now(),
+        body: created?.body ?? newComment.trim(),
+        user: created?.user ?? { login: currentUserLogin ?? "You" },
+        created_at: created?.created_at ?? new Date().toISOString(),
+        html_url: created?.html_url,
+      }
+      setComments((prev) => [...prev, newEntry])
+      setNewComment("")
+      setTimeout(() => {
+        conversationsEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
+      }, 50)
+    } catch {
+      setCommentError("Failed to add comment")
+    } finally {
+      setCommentSubmitting(false)
+    }
+  }
+
   if (!repo) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-4">
@@ -390,7 +462,7 @@ export default function PRDetailPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="description" className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="flex flex-wrap gap-1">
           <TabsTrigger value="description" className="flex items-center gap-2">
             <NoteIcon size={16} className="text-gray-500" />
@@ -457,7 +529,7 @@ export default function PRDetailPage() {
               </CardTitle>
               <CardDescription>Comments on this pull request</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               {comments.length === 0 ? (
                 <p className="text-muted-foreground py-4 text-sm">No comments yet.</p>
               ) : (
@@ -510,6 +582,41 @@ export default function PRDetailPage() {
                   })}
                 </div>
               )}
+
+              <div ref={conversationsEndRef} className="flex flex-col gap-2 pt-2 border-t border-border">
+                <p className="text-sm font-medium text-foreground">Add a comment</p>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Write a comment…"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault()
+                        handleAddComment()
+                      }
+                    }}
+                    disabled={commentSubmitting}
+                    className="min-w-0 flex-1"
+                  />
+                  <Button
+                    onClick={handleAddComment}
+                    disabled={!newComment.trim() || commentSubmitting}
+                  >
+                    {commentSubmitting ? (
+                      <>
+                        <Spinner className="mr-2 size-3.5" />
+                        Posting…
+                      </>
+                    ) : (
+                      "Comment"
+                    )}
+                  </Button>
+                </div>
+                {commentError && (
+                  <p className="text-destructive text-sm">{commentError}</p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
