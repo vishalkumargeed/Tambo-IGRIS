@@ -2,7 +2,11 @@
 
 import * as React from "react"
 
-const STORAGE_KEY = "tambo-dashboard-customization"
+const STORAGE_KEY_BASE = "tambo-dashboard-customization"
+
+function getStorageKey(userId: string | null | undefined): string {
+  return userId ? `${STORAGE_KEY_BASE}-${userId}` : STORAGE_KEY_BASE
+}
 
 export type DashboardCustomization = {
   /** Light, dark, or follow system */
@@ -38,10 +42,19 @@ const defaults: Required<DashboardCustomization> = {
   cardStyle: "default",
 }
 
-function loadFromStorage(): DashboardCustomization {
+function loadFromStorage(userId: string | null | undefined): DashboardCustomization {
   if (typeof window === "undefined") return {}
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const key = getStorageKey(userId)
+    let raw = localStorage.getItem(key)
+    // One-time migration: if user-scoped key is empty but legacy key has data, migrate it
+    if (!raw && userId) {
+      const legacy = localStorage.getItem(STORAGE_KEY_BASE)
+      if (legacy) {
+        localStorage.setItem(key, legacy)
+        raw = legacy
+      }
+    }
     if (!raw) return {}
     const parsed = JSON.parse(raw) as Record<string, unknown>
     const out: DashboardCustomization = {}
@@ -67,10 +80,11 @@ function loadFromStorage(): DashboardCustomization {
   }
 }
 
-function saveToStorage(custom: DashboardCustomization) {
+function saveToStorage(custom: DashboardCustomization, userId: string | null | undefined) {
   if (typeof window === "undefined") return
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(custom))
+    const key = getStorageKey(userId)
+    localStorage.setItem(key, JSON.stringify(custom))
     window.dispatchEvent(new CustomEvent("dashboard-customization-updated", { detail: custom }))
   } catch {
     /* ignore */
@@ -88,19 +102,28 @@ const DashboardCustomizationContext = React.createContext<
   DashboardCustomizationContextValue | undefined
 >(undefined)
 
-export function DashboardCustomizationProvider({ children }: { children: React.ReactNode }) {
-  const [customization, setCustomization] = React.useState<DashboardCustomization>(loadFromStorage)
+export function DashboardCustomizationProvider({
+  children,
+  userId,
+}: {
+  children: React.ReactNode
+  /** When set, UI preferences are stored per-user so they persist across logout/login */
+  userId?: string | null
+}) {
+  const [customization, setCustomization] = React.useState<DashboardCustomization>(() =>
+    loadFromStorage(userId)
+  )
 
-  /* Sync from localStorage on mount (SSR initial state is empty; client has localStorage) */
+  /* Sync from localStorage on mount and when userId changes (e.g. after login) */
   React.useEffect(() => {
-    setCustomization(loadFromStorage())
-  }, [])
+    setCustomization(loadFromStorage(userId))
+  }, [userId])
 
   React.useEffect(() => {
-    const handler = () => setCustomization(loadFromStorage())
+    const handler = () => setCustomization(loadFromStorage(userId))
     window.addEventListener("dashboard-customization-updated", handler)
     return () => window.removeEventListener("dashboard-customization-updated", handler)
-  }, [])
+  }, [userId])
 
   const merged = React.useMemo(
     () => ({
@@ -110,18 +133,21 @@ export function DashboardCustomizationProvider({ children }: { children: React.R
     [customization]
   )
 
-  const updateCustomization = React.useCallback((updates: Partial<DashboardCustomization>) => {
-    setCustomization((prev) => {
-      const next = { ...prev, ...updates }
-      saveToStorage(next)
-      return next
-    })
-  }, [])
+  const updateCustomization = React.useCallback(
+    (updates: Partial<DashboardCustomization>) => {
+      setCustomization((prev) => {
+        const next = { ...prev, ...updates }
+        saveToStorage(next, userId)
+        return next
+      })
+    },
+    [userId]
+  )
 
   const resetCustomization = React.useCallback(() => {
     setCustomization({})
-    saveToStorage({})
-  }, [])
+    saveToStorage({}, userId)
+  }, [userId])
 
   const value = React.useMemo(
     () => ({

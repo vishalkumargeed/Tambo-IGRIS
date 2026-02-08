@@ -23,8 +23,12 @@ export default async function Layout({ children }: { children: React.ReactNode }
       : undefined
 
   const owner = userToken ? await getGitHubLogin(userToken) : null
-
-
+  // Use login (GitHub username) as primary - it's stable and always set for GitHub OAuth
+  const userId =
+    (session?.user as { login?: string | null } | undefined)?.login ??
+    session?.user?.id ??
+    session?.user?.email ??
+    null
 
   return (
     <TamboProviderWithUser
@@ -36,9 +40,9 @@ export default async function Layout({ children }: { children: React.ReactNode }
 
 
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <DashboardCustomizationProvider>
+      <DashboardCustomizationProvider userId={userId}>
         <DashboardThemeSync />
-        <RepoProvider>
+        <RepoProvider userId={userId}>
           <DashboardSidebarWrapper>
             <AppSidebar variant="inset" />
             <SidebarInset>
