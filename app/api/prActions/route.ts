@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-/**
- * POST /api/prActions
- * Perform merge, close, or reopen on a PR via GitHub REST API.
- * Body: { owner, repoName, prNumber, action: "merge" | "close" | "reopen" }
- */
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -47,7 +42,6 @@ export async function POST(request: NextRequest) {
     let response: Response;
 
     if (action === "merge") {
-      // POST /repos/{owner}/{repo}/pulls/{pull_number}/merge
       response = await fetch(
         `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/pulls/${encodeURIComponent(prNumber)}/merge`,
         {
@@ -61,7 +55,6 @@ export async function POST(request: NextRequest) {
         }
       );
     } else {
-      // PATCH /repos/{owner}/{repo}/issues/{issue_number} - for close/reopen (PRs are issues)
       const newState = action === "close" ? "closed" : "open";
       response = await fetch(
         `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/issues/${encodeURIComponent(prNumber)}`,
@@ -78,9 +71,7 @@ export async function POST(request: NextRequest) {
       let errJson: { message?: string } = {};
       try {
         errJson = JSON.parse(errText);
-      } catch {
-        /* ignore */
-      }
+      } catch {}
       return NextResponse.json(
         {
           error: "GitHub API error",

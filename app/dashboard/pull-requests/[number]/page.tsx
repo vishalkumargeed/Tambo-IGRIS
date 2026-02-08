@@ -59,11 +59,9 @@ type Comment = {
   user?: { login: string; avatar_url?: string; html_url?: string }
   created_at?: string
   html_url?: string
-  /** For review comments: path and line context */
   path?: string
   line?: number
   isReviewComment?: boolean
-  /** Review summary (body of a submitted review) */
   isReviewSummary?: boolean
 }
 
@@ -142,9 +140,7 @@ export default function PRDetailPage() {
     try {
       const stored = typeof window !== "undefined" ? localStorage.getItem(PR_DETAIL_TAB_KEY) : null
       if (stored && (PR_TAB_VALUES as readonly string[]).includes(stored)) setActiveTab(stored)
-    } catch {
-      /* ignore */
-    }
+    } catch {}
   }, [])
 
   const handleTabChange = React.useCallback((value: string) => {

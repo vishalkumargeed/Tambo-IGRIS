@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-/**
- * POST /api/addComment
- * Add a comment to a PR or issue (PRs use the same issues comments endpoint).
- * Body: { owner, repoName, issueNumber, body }
- */
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get("Authorization");

@@ -123,7 +123,6 @@ export function RepoProvider({
   userId,
 }: {
   children: React.ReactNode;
-  /** When set, selected repo is stored per-user so it persists across logout/login */
   userId?: string | null;
 }) {
   return (

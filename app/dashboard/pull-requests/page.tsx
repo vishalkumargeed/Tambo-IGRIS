@@ -70,7 +70,6 @@ function getReadyForReview(
   if (override) return override
   if (pr.merged_at) return "Done"
   if (pr.state === "closed") return "Not Ready"
-  // When all checks pass AND PR aligns to template, show Ready
   if (apiReadyStatus === true) return "Ready"
   const labelNames = (pr.labels ?? []).map((l) => (l.name ?? "").toLowerCase())
   if (
@@ -450,7 +449,6 @@ export default function DashboardPullRequestsPage() {
       .finally(() => setLoadingClosed(false))
   }, [repo, token, refreshKey])
 
-  // Fetch ready status (checks + template) for each open PR to auto-set Review column to Ready
   React.useEffect(() => {
     if (!repo || !token || openPRs.length === 0) return
     const owner = encodeURIComponent(repo.owner)

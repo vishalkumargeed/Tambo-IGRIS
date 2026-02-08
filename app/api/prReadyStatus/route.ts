@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-/**
- * Extracts markdown section headers (## or ###) from template text.
- * Returns normalized header text for matching (lowercase, trimmed).
- */
 function extractTemplateSections(template: string): string[] {
   const sections: string[] = [];
   const lines = template.split(/\r?\n/);
@@ -16,10 +12,6 @@ function extractTemplateSections(template: string): string[] {
   return sections;
 }
 
-/**
- * Checks if PR body contains all required sections from the template.
- * Section matching is case-insensitive and flexible (header must appear in body).
- */
 function bodyAlignsToTemplate(prBody: string | null, templateSections: string[]): boolean {
   if (templateSections.length === 0) return true;
   if (!prBody || typeof prBody !== "string") return false;
@@ -30,9 +22,6 @@ function bodyAlignsToTemplate(prBody: string | null, templateSections: string[])
   return true;
 }
 
-/**
- * Fetches PR template from repo. Tries common locations.
- */
 async function fetchPRTemplate(
   owner: string,
   repoName: string,
@@ -59,18 +48,11 @@ async function fetchPRTemplate(
         const text = await res.text();
         return text ?? "";
       }
-    } catch {
-      /* try next path */
-    }
+    } catch {}
   }
   return "";
 }
 
-/**
- * GET /api/prReadyStatus?owner=&repoName=&prNumber=
- * Returns { checksPassed, templateAligned, ready }.
- * ready = true when all checks pass AND PR body aligns to PR template.
- */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -113,7 +95,6 @@ export async function GET(request: NextRequest) {
     const body = pr.body ?? null;
     const headSha = pr.head?.sha;
 
-    // If merged or closed, we don't need to compute ready - caller will use Done/Not Ready
     if (pr.state === "closed" || pr.merged_at) {
       return NextResponse.json({
         success: true,
@@ -123,7 +104,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Fetch check runs for head commit
     let checksPassed = true;
     if (headSha) {
       const checksRes = await fetch(
@@ -149,7 +129,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fetch PR template and check alignment
     const template = await fetchPRTemplate(owner, repoName, token);
     const sections = extractTemplateSections(template);
     const templateAligned = bodyAlignsToTemplate(body, sections);

@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
-/**
- * GET /api/githubUser
- * Returns the authenticated user's GitHub profile (GitHub REST API GET /user).
- */
 export async function GET() {
   try {
     const session = await auth();

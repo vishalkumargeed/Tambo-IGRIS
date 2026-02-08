@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 
-/**
- * GET /api/repoCommitActivity?owner=&repoName=
- * Returns weekly commit counts for the last year (GitHub stats/commit_activity).
- * May return 202 while GitHub computes; client can retry.
- */
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 
 const PER_PAGE = 100;
-const MAX_PAGES = 50; // cap to avoid rate limits / long responses
+const MAX_PAGES = 50;
 
 function getStartDate(range: string): Date {
   const now = new Date();
@@ -74,7 +74,6 @@ export async function GET(request: NextRequest) {
       else page++;
     }
 
-    // Build cumulative series from startDate to today
     const today = new Date();
     const from = new Date(startDate);
     let cumulative = 0;

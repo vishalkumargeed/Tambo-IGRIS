@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-/**
- * POST /api/createIssue
- * Create a new issue in a GitHub repository.
- * Body: { owner, repoName, title, body? }
- */
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get("Authorization");

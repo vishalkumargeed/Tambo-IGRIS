@@ -23,7 +23,6 @@ export default async function Layout({ children }: { children: React.ReactNode }
       : undefined
 
   const owner = userToken ? await getGitHubLogin(userToken) : null
-  // Use login (GitHub username) as primary - it's stable and always set for GitHub OAuth
   const userId =
     (session?.user as { login?: string | null } | undefined)?.login ??
     session?.user?.id ??

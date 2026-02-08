@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 
-/**
- * GET /api/repoLanguages?owner=&repoName=
- * Returns repo language breakdown (bytes per language) from GitHub.
- */
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();

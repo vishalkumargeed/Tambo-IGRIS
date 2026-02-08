@@ -9,11 +9,9 @@ function getStorageKey(userId: string | null | undefined): string {
 }
 
 export type DashboardCustomization = {
-  /** Light, dark, or follow system */
+
   theme?: "light" | "dark" | "system"
-  /** Card layout on main dashboard */
   cardLayout?: "grid" | "compact" | "minimal"
-  /** Stats display: cards (4 cards) or radial (pie/radial chart with clickable segments) */
   statsDisplayVariant?: "cards" | "radial"
   /** Show/hide dashboard sections */
   showSectionCards?: boolean

@@ -16,7 +16,6 @@ import {
 import { useSidebar } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 
-/** Fired when Examples page wants to insert a prompt into the chat. Detail: { prompt: string } */
 export const TAMBO_INSERT_PROMPT = "tambo-insert-prompt"
 
 type ExampleCategory = "pr" | "issues" | "repo" | "dashboard" | "general"
@@ -28,9 +27,7 @@ const EXAMPLES: {
   title: string
   description: string
   prompt: string
-  /** Bento grid: span 2 cols or 2 rows for emphasis */
   featured?: boolean
-  /** Extra example prompts shown in the card (e.g. for "Customize the dashboard") */
   examplePrompts?: string[]
 }[] = [
   {

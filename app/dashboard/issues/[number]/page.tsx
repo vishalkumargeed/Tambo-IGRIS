@@ -92,9 +92,7 @@ export default function IssueDetailPage() {
     try {
       const stored = typeof window !== "undefined" ? localStorage.getItem(ISSUE_DETAIL_TAB_KEY) : null
       if (stored && (ISSUE_TAB_VALUES as readonly string[]).includes(stored)) setActiveTab(stored)
-    } catch {
-      /* ignore */
-    }
+    } catch {}
   }, [])
 
   const handleTabChange = React.useCallback((value: string) => {

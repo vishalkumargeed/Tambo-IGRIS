@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const owner = searchParams.get("owner");
     const repoName = searchParams.get("repoName");
-    const state = searchParams.get("state") ?? "open"; // open | closed | all
+    const state = searchParams.get("state") ?? "open";
     const authHeader = request.headers.get("Authorization");
     const token = authHeader?.replace(/^Bearer\s+/i, "");
 
