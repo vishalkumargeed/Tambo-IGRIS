@@ -9,6 +9,7 @@ import type { TamboComponent } from "@tambo-ai/react";
 import { z } from "zod";
 import { ContinueReviewCard } from "@/components/tambo/continue-review-card";
 import { CreateIssueCard } from "@/components/tambo/create-issue-card";
+import { CreateRepoCard } from "@/components/tambo/create-repo-card";
 import { DashboardCustomizer } from "@/components/tambo/dashboard-customizer";
 import { IssueListTable } from "@/components/tambo/issue-selection-table";
 import { MergePRCard } from "@/components/tambo/merge-pr-card";
@@ -114,6 +115,15 @@ export const components: TamboComponent[] = [
       owner: z.string().optional().default(""),
       repo: z.string().optional().default(""),
       repoFullName: z.string().optional(),
+    }),
+  },
+  {
+    name: "CreateRepoCard",
+    description:
+      "Render when the user asks to create a new GitHub repository (e.g. 'create a new repo', 'I want to create a repository'). Shows a card with Repository name (required), Description (optional), Visibility (public/private), Organization (optional—if provided the repo is created under that org, otherwise under the authenticated user), and 'Initialize with README' (optional). Pass organization only if the user specified an org (e.g. 'create a repo in org X'). When the user submits the card, you will receive a follow-up with name, description, visibility, org (if any), and init README—use the GitHub MCP to create the repository (e.g. create_repository or the equivalent tool).",
+    component: CreateRepoCard,
+    propsSchema: z.object({
+      organization: z.string().optional(),
     }),
   },
 ];

@@ -14,11 +14,16 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
 } from "@/components/ui/sidebar"
+import { Kbd, KbdGroup } from "@/components/ui/kbd"
 
 import { useSession } from "next-auth/react"
 import { ModeToggle } from "./mode-toggle"
@@ -47,8 +52,10 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const  {data : session} = useSession();
-  const user= session?.user;
+  const { data: session } = useSession()
+  const user = session?.user
+  const isMac =
+    typeof navigator !== "undefined" && navigator.platform.startsWith("Mac")
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -77,6 +84,52 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
+        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+          <SidebarGroupLabel>Sentinel Shortcuts</SidebarGroupLabel>
+          <SidebarSeparator className="my-1" />
+          <SidebarGroupContent className="flex flex-col gap-2 px-2 py-1">
+            <div className="flex items-center justify-between gap-2 text-xs text-sidebar-foreground/80">
+              <span>Open / close chat</span>
+              <KbdGroup>
+                {isMac ? (
+                  <>
+                    <Kbd>⌘</Kbd>
+                    <Kbd>K</Kbd>
+                  </>
+                ) : (
+                  <>
+                    <Kbd>Ctrl</Kbd>
+                    <Kbd>K</Kbd>
+                  </>
+                )}
+              </KbdGroup>
+            </div>
+            <div className="flex items-center justify-between gap-2 text-xs text-sidebar-foreground/80">
+              <span>Stop response</span>
+              <KbdGroup>
+                {isMac ? (
+                  <>
+                    <Kbd>⌘</Kbd>
+                    <Kbd>C</Kbd>
+                  </>
+                ) : (
+                  <>
+                    <Kbd>Ctrl</Kbd>
+                    <Kbd>C</Kbd>
+                  </>
+                )}
+              </KbdGroup>
+            </div>
+            <div className="flex items-center justify-between gap-2 text-xs text-sidebar-foreground/80">
+              <span>Close chat</span>
+              <Kbd>Esc</Kbd>
+            </div>
+            <div className="flex items-center justify-between gap-2 text-xs text-sidebar-foreground/80">
+              <span>Mention a repo</span>
+              <Kbd>@</Kbd>
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
         <NavUser user={user ?? undefined} />
       </SidebarFooter>
     </Sidebar>

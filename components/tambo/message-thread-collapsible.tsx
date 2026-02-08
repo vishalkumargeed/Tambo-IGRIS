@@ -22,6 +22,7 @@ import {
   ThreadContentMessages,
 } from "@/components/tambo/thread-content";
 import { ThreadDropdown } from "@/components/tambo/thread-dropdown";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { useRepoResourceProvider } from "@/lib/repo-resource-provider";
 import { cn } from "@/lib/utils";
 import { type Suggestion, useTamboThread } from "@tambo-ai/react";
@@ -93,7 +94,7 @@ const useCollapsibleState = (defaultOpen = false, embedded = false) => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [embedded]);
 
-  return { isOpen, setIsOpen, shortcutText };
+  return { isOpen, setIsOpen, shortcutText, isMac };
 };
 
 /**
@@ -137,6 +138,9 @@ CollapsibleContainer.displayName = "CollapsibleContainer";
 interface CollapsibleTriggerProps {
   isOpen: boolean;
   shortcutText: string;
+  isMac: boolean;
+  /** When true, show "Stop" shortcut (Ctrl+C / ⌘C) in the header */
+  showStopShortcut?: boolean;
   onClose: () => void;
   onThreadChange: () => void;
   config: {
@@ -153,6 +157,8 @@ interface CollapsibleTriggerProps {
 const CollapsibleTrigger = ({
   isOpen,
   shortcutText,
+  isMac,
+  showStopShortcut = false,
   onClose,
   onThreadChange,
   config,
@@ -169,11 +175,20 @@ const CollapsibleTrigger = ({
           aria-controls="message-thread-content"
         >
           <span>{config.labels.closedState}</span>
-          <span
-            className="text-xs text-muted-foreground pl-8"
-            suppressHydrationWarning
-          >
-            {`(${shortcutText})`}
+          <span className="flex items-center gap-1 pl-8 text-xs text-muted-foreground" suppressHydrationWarning>
+            <KbdGroup>
+              {isMac ? (
+                <>
+                  <Kbd>⌘</Kbd>
+                  <Kbd>K</Kbd>
+                </>
+              ) : (
+                <>
+                  <Kbd>Ctrl</Kbd>
+                  <Kbd>K</Kbd>
+                </>
+              )}
+            </KbdGroup>
           </span>
         </button>
       </Collapsible.Trigger>
@@ -183,6 +198,24 @@ const CollapsibleTrigger = ({
         <div className="flex items-center gap-2">
           <span>{config.labels.openState}</span>
           <ThreadDropdown onThreadChange={onThreadChange} />
+          {showStopShortcut && (
+            <span className="text-muted-foreground text-xs">
+              Stop{" "}
+              <KbdGroup>
+                {isMac ? (
+                  <>
+                    <Kbd>⌘</Kbd>
+                    <Kbd>C</Kbd>
+                  </>
+                ) : (
+                  <>
+                    <Kbd>Ctrl</Kbd>
+                    <Kbd>C</Kbd>
+                  </>
+                )}
+              </KbdGroup>
+            </span>
+          )}
         </div>
         <button
           className="p-1 rounded-full hover:bg-muted/70 transition-colors cursor-pointer"
@@ -208,9 +241,10 @@ export const MessageThreadCollapsible = React.forwardRef<
     { className, defaultOpen = false, variant, height, maxHeight, embedded = false, ...props },
     ref,
   ) => {
-    const { isOpen, setIsOpen, shortcutText } =
+    const { isOpen, setIsOpen, shortcutText, isMac } =
       useCollapsibleState(defaultOpen, embedded);
     const { cancel, isIdle } = useTamboThread();
+    const showStopShortcut = !isIdle;
     const router = useRouter();
     const prevIdleRef = React.useRef(isIdle);
 
@@ -287,6 +321,8 @@ export const MessageThreadCollapsible = React.forwardRef<
         <CollapsibleTrigger
           isOpen={isOpen}
           shortcutText={shortcutText}
+          isMac={isMac}
+          showStopShortcut={showStopShortcut}
           onClose={() => setIsOpen(false)}
           onThreadChange={handleThreadChange}
           config={THREAD_CONFIG}
