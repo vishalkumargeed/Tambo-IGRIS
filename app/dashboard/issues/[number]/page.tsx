@@ -345,22 +345,22 @@ export default function IssueDetailPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="description" className="mt-4">
+        <TabsContent value="description" className="mt-2">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <PencilIcon size={16} className="text-gray-500" />
-                Title
+                
+                Issue Title
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="font-medium">{issue.title}</p>
             </CardContent>
           </Card>
-          <Card className="mt-4">
+          <Card className="mt-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <NoteIcon size={16} className="text-gray-500" />
+               
                 Description
               </CardTitle>
             </CardHeader>

@@ -2,11 +2,14 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 
 import {
   IssueOpenedIcon,
   IssueClosedIcon,
+  PlusIcon,
+  SyncIcon,
 } from "@primer/octicons-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -15,9 +18,12 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Table,
   TableBody,
@@ -171,6 +177,13 @@ export default function DashboardIssuesPage() {
   const [loadingClosed, setLoadingClosed] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
   const [refreshKey, setRefreshKey] = React.useState(0)
+  const [refreshing, setRefreshing] = React.useState(false)
+  const [newIssueOpen, setNewIssueOpen] = React.useState(false)
+  const [newIssueTitle, setNewIssueTitle] = React.useState("")
+  const [newIssueBody, setNewIssueBody] = React.useState("")
+  const [newIssueSubmitting, setNewIssueSubmitting] = React.useState(false)
+  const [newIssueError, setNewIssueError] = React.useState<string | null>(null)
+  const router = useRouter()
 
   React.useEffect(() => {
     const handler = () => setRefreshKey((k) => k + 1)
@@ -214,6 +227,55 @@ export default function DashboardIssuesPage() {
       .finally(() => setLoadingClosed(false))
   }, [repo, token, refreshKey])
 
+  React.useEffect(() => {
+    if (!loadingOpen && !loadingClosed) setRefreshing(false)
+  }, [loadingOpen, loadingClosed])
+
+  const handleRefresh = () => {
+    setRefreshing(true)
+    setRefreshKey((k) => k + 1)
+  }
+
+  const handleCreateIssue = async () => {
+    if (!repo || !token || !newIssueTitle.trim() || newIssueSubmitting) return
+    setNewIssueError(null)
+    setNewIssueSubmitting(true)
+    try {
+      const res = await fetch("/api/createIssue", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          owner: repo.owner,
+          repoName: repo.name,
+          title: newIssueTitle.trim(),
+          body: newIssueBody.trim() || undefined,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setNewIssueError(data.message ?? data.error ?? "Failed to create issue")
+        return
+      }
+      const issue = data.data
+      setNewIssueOpen(false)
+      setNewIssueTitle("")
+      setNewIssueBody("")
+      setRefreshKey((k) => k + 1)
+      if (issue?.number != null) {
+        router.push(
+          `/dashboard/issues/${issue.number}?owner=${encodeURIComponent(repo.owner)}&repo=${encodeURIComponent(repo.name)}`
+        )
+      }
+    } catch {
+      setNewIssueError("Failed to create issue")
+    } finally {
+      setNewIssueSubmitting(false)
+    }
+  }
+
   if (!repo) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-4">
@@ -241,14 +303,110 @@ export default function DashboardIssuesPage() {
     <div className="flex flex-1 flex-col gap-4 px-4 py-6 lg:px-6">
       <Card>
         <CardHeader>
-          <CardTitle>Issues</CardTitle>
-          <CardDescription>
-            Open and closed issues for {repo.fullName}
-          </CardDescription>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <CardTitle>Issues</CardTitle>
+              <CardDescription>
+                Open and closed issues for {repo.fullName}
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+            
+              <Button onClick={() => setNewIssueOpen(true)}>
+                <PlusIcon size={16} className="mr-2" />
+                New issue
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={refreshing || loadingOpen || loadingClosed}
+                aria-label="Refresh"
+              >
+                <SyncIcon size={16} className={refreshing ? "animate-spin" : ""} />
+                {refreshing ? "Refreshing…" : "Refresh"}
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {error && (
             <p className="text-destructive mb-4 text-sm">{error}</p>
+          )}
+          {newIssueOpen && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="new-issue-title"
+            >
+              <div
+                className="absolute inset-0 bg-black/50"
+                onClick={() => !newIssueSubmitting && setNewIssueOpen(false)}
+                aria-hidden="true"
+              />
+              <Card
+                className="relative z-10 w-full max-w-md"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <CardHeader>
+                  <CardTitle id="new-issue-title">New issue</CardTitle>
+                  <CardDescription>
+                    Create a new issue in {repo.fullName}. Title is required.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-issue-title-input">Title</Label>
+                    <Input
+                      id="new-issue-title-input"
+                      placeholder="Issue title"
+                      value={newIssueTitle}
+                      onChange={(e) => setNewIssueTitle(e.target.value)}
+                      disabled={newIssueSubmitting}
+                      className="focus-visible:border-muted-foreground/50 focus-visible:ring-muted-foreground/20"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-issue-body">Description (optional)</Label>
+                    <textarea
+                      id="new-issue-body"
+                      placeholder="Add a description…"
+                      value={newIssueBody}
+                      onChange={(e) => setNewIssueBody(e.target.value)}
+                      disabled={newIssueSubmitting}
+                      rows={6}
+                      className="border-input bg-background placeholder:text-muted-foreground flex w-full min-w-0 rounded-md border px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus:border-muted-foreground/50 focus:ring-2 focus:ring-muted-foreground/20 focus:ring-offset-0 disabled:pointer-events-none disabled:opacity-50"
+                    />
+                  </div>
+                  {newIssueError && (
+                    <p className="text-destructive text-sm">{newIssueError}</p>
+                  )}
+                </CardContent>
+                <CardFooter className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setNewIssueOpen(false)}
+                    disabled={newIssueSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleCreateIssue}
+                    disabled={!newIssueTitle.trim() || newIssueSubmitting}
+                  >
+                    {newIssueSubmitting ? (
+                      <>
+                        <Spinner className="mr-2 size-3.5" />
+                        Creating…
+                      </>
+                    ) : (
+                      "Create issue"
+                    )}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
           )}
           <Tabs defaultValue="open">
             <TabsList>
